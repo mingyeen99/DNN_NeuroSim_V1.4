@@ -125,7 +125,7 @@ void Adder::CalculateArea(double _newHeight, double _newWidth, AreaModify _optio
 	}
 }
 
-void Adder::CalculateLatency(double _rampInput, double _capLoad, double numRead, int M3D){
+void Adder::CalculateLatency(double _rampInput, double _capLoad, double numRead){
 	if (!initialized) {
 		cout << "[Adder] Error: Require initialization first!" << endl;
 	} else {
@@ -143,28 +143,28 @@ void Adder::CalculateLatency(double _rampInput, double _capLoad, double numRead,
 
 		// Calibration data pattern is A=1111111..., B=1000000... and Cin=1
 		// 1st
-		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech, M3D) * 2;
+		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech) * 2;
 		tr = resPullDown * (capNandOutput + capNandInput * 3);
 		gm = CalculateTransconductance(widthNandN, NMOS, tech);
 		beta = 1 / (resPullDown * gm);
 		readLatency += horowitz(tr, beta, ramp[0], &ramp[1]);
 		
 		// 2nd
-		resPullUp = CalculateOnResistance(widthNandP, PMOS, inputParameter.temperature, tech, M3D);
+		resPullUp = CalculateOnResistance(widthNandP, PMOS, inputParameter.temperature, tech);
 		tr = resPullUp * (capNandOutput + capNandInput * 2);
 		gm = CalculateTransconductance(widthNandP, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
 		readLatency += horowitz(tr, beta, ramp[1], &ramp[2]);
 		
 		// 3rd
-		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech, M3D) * 2;
+		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech) * 2;
 		tr = resPullDown * (capNandOutput + capNandInput * 3);
 		gm = CalculateTransconductance(widthNandN, NMOS, tech);
 		beta = 1 / (resPullDown * gm);
 		readLatencyIntermediate += horowitz(tr, beta, ramp[2], &ramp[3]);
 
 		// 4th
-		resPullUp = CalculateOnResistance(widthNandP, PMOS, inputParameter.temperature, tech, M3D);
+		resPullUp = CalculateOnResistance(widthNandP, PMOS, inputParameter.temperature, tech);
 		tr = resPullUp * (capNandOutput + capNandInput * 2);
 		gm = CalculateTransconductance(widthNandP, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
@@ -175,21 +175,21 @@ void Adder::CalculateLatency(double _rampInput, double _capLoad, double numRead,
 		}
 		
 		// 5th
-		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech, M3D) * 2;
+		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech) * 2;
 		tr = resPullDown * (capNandOutput + capNandInput * 3);
 		gm = CalculateTransconductance(widthNandN, NMOS, tech);
 		beta = 1 / (resPullDown * gm);
 		readLatency += horowitz(tr, beta, ramp[4], &ramp[5]);
 
 		// 6th
-		resPullUp = CalculateOnResistance(widthNandP, PMOS, inputParameter.temperature, tech, M3D);
+		resPullUp = CalculateOnResistance(widthNandP, PMOS, inputParameter.temperature, tech);
 		tr = resPullUp * (capNandOutput + capNandInput);
 		gm = CalculateTransconductance(widthNandP, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
 		readLatency += horowitz(tr, beta, ramp[5], &ramp[6]);
 		
 		// 7th
-		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech, M3D) * 2;
+		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech) * 2;
 		tr = resPullDown * (capNandOutput + capLoad);
 		gm = CalculateTransconductance(widthNandN, NMOS, tech);
 		beta = 1 / (resPullDown * gm);

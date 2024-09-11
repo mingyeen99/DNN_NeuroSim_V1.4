@@ -69,7 +69,7 @@ Bus *busOutputCM;
 DFF *bufferInputCM;
 DFF *bufferOutputCM;
 
-void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParameter, Technology& tech, MemCell& cell, int _numSubArrayRowNM, int _numSubArrayColNM, int _numSubArrayRowCM, int _numSubArrayColCM) {
+void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParameter, Technology& tech, Technology& techTop, Technology& techBottom, MemCell& cell, int _numSubArrayRowNM, int _numSubArrayColNM, int _numSubArrayRowCM, int _numSubArrayColCM) {
 
 	/*** circuit level parameters ***/
 	switch(param->memcelltype) {
@@ -103,22 +103,39 @@ void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParamet
 		default:	exit(-1);
 	}
 	
-	subArray = new SubArray(inputParameter, tech, cell);
-	adderTreeNM = new AdderTree(inputParameter, tech, cell);
-	busInputNM = new Bus(inputParameter, tech, cell);
-	busOutputNM = new Bus(inputParameter, tech, cell);
-	bufferInputNM = new DFF(inputParameter, tech, cell);
-	bufferOutputNM = new DFF(inputParameter, tech, cell);
-	adderTreeCM = new AdderTree(inputParameter, tech, cell);
-	busInputCM = new Bus(inputParameter, tech, cell);
-	busOutputCM = new Bus(inputParameter, tech, cell);
-	bufferInputCM = new DFF(inputParameter, tech, cell);
-	bufferOutputCM = new DFF(inputParameter, tech, cell);
-		
+	if (param->H3D) {
+		subArray = new SubArray(inputParameter, techTop, cell);
+		adderTreeNM = new AdderTree(inputParameter, techBottom, cell);
+		busInputNM = new Bus(inputParameter, techBottom, cell);
+		busOutputNM = new Bus(inputParameter, techBottom, cell);
+		bufferInputNM = new DFF(inputParameter, techBottom, cell);
+		bufferOutputNM = new DFF(inputParameter, techBottom, cell);
+		adderTreeCM = new AdderTree(inputParameter, techBottom, cell);
+		busInputCM = new Bus(inputParameter, techBottom, cell);
+		busOutputCM = new Bus(inputParameter, techBottom, cell);
+		bufferInputCM = new DFF(inputParameter, techBottom, cell);
+		bufferOutputCM = new DFF(inputParameter, techBottom, cell);
+	} else {
+		subArray = new SubArray(inputParameter, tech, cell);
+		adderTreeNM = new AdderTree(inputParameter, tech, cell);
+		busInputNM = new Bus(inputParameter, tech, cell);
+		busOutputNM = new Bus(inputParameter, tech, cell);
+		bufferInputNM = new DFF(inputParameter, tech, cell);
+		bufferOutputNM = new DFF(inputParameter, tech, cell);
+		adderTreeCM = new AdderTree(inputParameter, tech, cell);
+		busInputCM = new Bus(inputParameter, tech, cell);
+		busOutputCM = new Bus(inputParameter, tech, cell);
+		bufferInputCM = new DFF(inputParameter, tech, cell);
+		bufferOutputCM = new DFF(inputParameter, tech, cell);
+	}
+	
 	/* Create SubArray object and link the required global objects (not initialization) */
 	inputParameter.temperature = param->temp;   // Temperature (K)
 	inputParameter.processNode = param->technode;    // Technology node
 	tech.Initialize(inputParameter.processNode, inputParameter.deviceRoadmap, inputParameter.transistorType);
+	/* for H3D simulation */
+	techTop.Initialize(param->technodeTop, param->deviceroadmapTop==1? HP:LSTP, conventional);
+	techBottom.Initialize(param->technodeBottom, param->deviceroadmapBottom==1? HP:LSTP, conventional);
 	
 	cell.resistanceOn = param->resistanceOn;	                                // Ron resistance at Vr in the reported measurement data (need to recalculate below if considering the nonlinearity)
 	cell.resistanceOff = param->resistanceOff;	                                // Roff resistance at Vr in the reported measurement dat (need to recalculate below if considering the nonlinearity)
@@ -182,6 +199,7 @@ void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParamet
 	int numSubArrayColNM = _numSubArrayColNM;
 	int numSubArrayRowCM = _numSubArrayRowCM;
 	int numSubArrayColCM = _numSubArrayColCM;
+
 	/*** initialize modules ***/
 	subArray->Initialize(numRow, numCol, param->unitLengthWireResistance);        // initialize subArray
 	subArray->CalculateArea();
@@ -198,13 +216,9 @@ void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParamet
 		} else {
 			bufferOutputNM->Initialize((numCol/param->numColMuxed)*((log2((double)numRow)+param->cellBit-1)+param->numBitInput+param->numColPerSynapse+adderTreeNM->numStage), param->clkFreq);
 		}
-		if (param->M3D) {
-			busInputNM->Initialize(HORIZONTAL, numSubArrayRowNM, numSubArrayColNM, 0, numRow, subArray->height/2, subArray->width/2, param->clkFreq);
-			busOutputNM->Initialize(VERTICAL, numSubArrayRowNM, numSubArrayColNM, 0, numCol, subArray->height/2, subArray->width/2, param->clkFreq);
-		} else {
-			busInputNM->Initialize(HORIZONTAL, numSubArrayRowNM, numSubArrayColNM, 0, numRow, subArray->height, subArray->width, param->clkFreq);
-			busOutputNM->Initialize(VERTICAL, numSubArrayRowNM, numSubArrayColNM, 0, numCol, subArray->height, subArray->width, param->clkFreq);
-		}
+		
+		busInputNM->Initialize(HORIZONTAL, numSubArrayRowNM, numSubArrayColNM, 0, numRow, subArray->height, subArray->width, param->clkFreq);
+		busOutputNM->Initialize(VERTICAL, numSubArrayRowNM, numSubArrayColNM, 0, numCol, subArray->height, subArray->width, param->clkFreq);
 	}
 	if (param->parallelRead) {
 		adderTreeCM->Initialize(numSubArrayRowCM, log2((double)param->levelOutput)+param->numBitInput+param->numColPerSynapse+1, ceil((double)numSubArrayColCM*(double)numCol/(double)param->numColMuxed), param->clkFreq);
@@ -218,13 +232,9 @@ void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParamet
 	} else {
 		bufferOutputCM->Initialize((numCol/param->numColMuxed)*((log2((double)numRow)+param->cellBit-1)+param->numBitInput+param->numColPerSynapse+adderTreeCM->numStage), param->clkFreq);
 	}
-	if (param->M3D) {
-		busInputCM->Initialize(HORIZONTAL, numSubArrayRowCM, numSubArrayColCM, 0, numRow, subArray->height/2, subArray->width/2, param->clkFreq);
-		busOutputCM->Initialize(VERTICAL, numSubArrayRowCM, numSubArrayColCM, 0, numCol, subArray->height/2, subArray->width/2, param->clkFreq);	
-	} else {
-		busInputCM->Initialize(HORIZONTAL, numSubArrayRowCM, numSubArrayColCM, 0, numRow, subArray->height, subArray->width, param->clkFreq);
-		busOutputCM->Initialize(VERTICAL, numSubArrayRowCM, numSubArrayColCM, 0, numCol, subArray->height, subArray->width, param->clkFreq);	
-	}
+	
+	busInputCM->Initialize(HORIZONTAL, numSubArrayRowCM, numSubArrayColCM, 0, numRow, subArray->height, subArray->width, param->clkFreq);
+	busOutputCM->Initialize(VERTICAL, numSubArrayRowCM, numSubArrayColCM, 0, numCol, subArray->height, subArray->width, param->clkFreq);	
 }
 
 
@@ -277,7 +287,7 @@ vector<double> ProcessingUnitCalculateArea(SubArray *subArray, int numSubArrayRo
 
 
 double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vector<double> > &newMemory, const vector<vector<double> > &oldMemory, 
-											const vector<vector<double> > &inputVector, const vector<int> &partition3D, 
+											const vector<vector<double> > &inputVector,
 											int arrayDupRow, int arrayDupCol, int numSubArrayRow, int numSubArrayCol, int weightMatrixRow,
 											int weightMatrixCol, int numInVector, MemCell& cell, bool NMpe, double *readLatency, double *readDynamicEnergy, double *leakage, 
 											double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy,
@@ -339,7 +349,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 							vector<double> columnResistance;
 							columnResistance = GetColumnResistance(input, subArrayMemory, cell, param->parallelRead, subArray->resCellAccess);
 							
-							subArray->CalculateLatency(1e20, columnResistance, CalculateclkFreq, partition3D);
+							subArray->CalculateLatency(1e20, columnResistance, CalculateclkFreq);
 							if(CalculateclkFreq && (*clkPeriod < subArray->readLatency)){
 								*clkPeriod = subArray->readLatency;					//clk freq is decided by the longest sensing latency
 							}							
@@ -360,7 +370,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 							}
 						}
 						if (NMpe) {
-							adderTreeNM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0, partition3D[1]);
+							adderTreeNM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
 							adderTreeNM->CalculatePower((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 							*readLatency = MAX(subArrayReadLatency + adderTreeNM->readLatency, (*readLatency));
 							*readDynamicEnergy += adderTreeNM->readDynamicEnergy;
@@ -369,7 +379,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 							*coreLatencyOther = MAX(subArrayLatencyOther, (*coreLatencyOther));
 							*coreEnergyAccum += adderTreeNM->readDynamicEnergy;
 						} else {
-							adderTreeCM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0, partition3D[1]);
+							adderTreeCM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
 							adderTreeCM->CalculatePower((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 							*readLatency = MAX(subArrayReadLatency + adderTreeCM->readLatency, (*readLatency));
 							*readDynamicEnergy += adderTreeCM->readDynamicEnergy;
@@ -414,7 +424,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 				vector<double> columnResistance;
 				columnResistance = GetColumnResistance(input, subArrayMemory, cell, param->parallelRead, subArray->resCellAccess);
 				
-				subArray->CalculateLatency(1e20, columnResistance, CalculateclkFreq, partition3D);
+				subArray->CalculateLatency(1e20, columnResistance, CalculateclkFreq);
 				if(CalculateclkFreq && (*clkPeriod < subArray->readLatency)){
 					*clkPeriod = subArray->readLatency;					//clk freq is decided by the longest sensing latency
 				}
@@ -475,7 +485,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 						vector<double> columnResistance;
 						columnResistance = GetColumnResistance(input, subArrayMemory, cell, param->parallelRead, subArray->resCellAccess);
 
-						subArray->CalculateLatency(1e20, columnResistance, CalculateclkFreq, partition3D);
+						subArray->CalculateLatency(1e20, columnResistance, CalculateclkFreq);
 						if(CalculateclkFreq && (*clkPeriod < subArray->readLatency)){
 							*clkPeriod = subArray->readLatency;					//clk freq is decided by the longest sensing latency
 						}
@@ -503,14 +513,14 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 			}
 		}
 		if (NMpe) {
-			adderTreeNM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0, partition3D[1]);
+			adderTreeNM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
 			adderTreeNM->CalculatePower((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 			*readLatency += adderTreeNM->readLatency;
 			*coreLatencyAccum += adderTreeNM->readLatency;
 			*readDynamicEnergy += adderTreeNM->readDynamicEnergy;
 			*coreEnergyAccum += adderTreeNM->readDynamicEnergy;
 		} else {
-			adderTreeCM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0, partition3D[1]);
+			adderTreeCM->CalculateLatency((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
 			adderTreeCM->CalculatePower((int)(numInVector/param->numBitInput)*ceil(param->numColMuxed/param->numColPerSynapse), ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 			*readLatency += adderTreeCM->readLatency;
 			*coreLatencyAccum += adderTreeCM->readLatency;
@@ -529,14 +539,14 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 			bufferInputNM->CalculatePower(weightMatrixRow/param->numRowPerSynapse*numInVector/(bufferInputNM->numDff), bufferInputNM->numDff, false);
 			bufferOutputNM->CalculatePower(weightMatrixCol/param->numColPerSynapse*adderTreeNM->numAdderBit*numInVector/param->numBitInput/(bufferOutputNM->numDff), bufferOutputNM->numDff, false);
 			
-			busInputNM->CalculateLatency(weightMatrixRow/param->numRowPerSynapse*numInVector/(busInputNM->busWidth), partition3D[3]); 
+			busInputNM->CalculateLatency(weightMatrixRow/param->numRowPerSynapse*numInVector/(busInputNM->busWidth)); 
 			busInputNM->CalculatePower(busInputNM->busWidth, weightMatrixRow/param->numRowPerSynapse*numInVector/(busInputNM->busWidth));
 			
 			if (param->parallelRead) {
-				busOutputNM->CalculateLatency((weightMatrixCol/param->numColPerSynapse*log2((double)param->levelOutput)*numInVector/param->numBitInput)/(busOutputNM->numRow*busOutputNM->busWidth), partition3D[3]);
+				busOutputNM->CalculateLatency((weightMatrixCol/param->numColPerSynapse*log2((double)param->levelOutput)*numInVector/param->numBitInput)/(busOutputNM->numRow*busOutputNM->busWidth));
 				busOutputNM->CalculatePower(busOutputNM->numRow*busOutputNM->busWidth, (weightMatrixCol/param->numColPerSynapse*log2((double)param->levelOutput)*numInVector/param->numBitInput)/(busOutputNM->numRow*busOutputNM->busWidth));
 			} else {
-				busOutputNM->CalculateLatency((weightMatrixCol/param->numColPerSynapse*(log2((double)param->numRowSubArray)+param->cellBit-1)*numInVector/param->numBitInput)/(busOutputNM->numRow*busOutputNM->busWidth), partition3D[3]);
+				busOutputNM->CalculateLatency((weightMatrixCol/param->numColPerSynapse*(log2((double)param->numRowSubArray)+param->cellBit-1)*numInVector/param->numBitInput)/(busOutputNM->numRow*busOutputNM->busWidth));
 				busOutputNM->CalculatePower(busOutputNM->numRow*busOutputNM->busWidth, (weightMatrixCol/param->numColPerSynapse*(log2((double)param->numRowSubArray)+param->cellBit-1)*numInVector/param->numBitInput)/(busOutputNM->numRow*busOutputNM->busWidth));
 			}
 
@@ -553,14 +563,14 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 			bufferInputCM->CalculatePower(weightMatrixRow/param->numRowPerSynapse*numInVector/(bufferInputCM->numDff), bufferInputCM->numDff, false);
 			bufferOutputCM->CalculatePower(weightMatrixCol/param->numColPerSynapse*adderTreeCM->numAdderBit*numInVector/param->numBitInput/(bufferOutputCM->numDff), bufferOutputCM->numDff, false);
 			
-			busInputCM->CalculateLatency(weightMatrixRow/param->numRowPerSynapse*numInVector/(busInputCM->busWidth), partition3D[3]); 
+			busInputCM->CalculateLatency(weightMatrixRow/param->numRowPerSynapse*numInVector/(busInputCM->busWidth)); 
 			busInputCM->CalculatePower(busInputCM->busWidth, weightMatrixRow/param->numRowPerSynapse*numInVector/(busInputCM->busWidth));
 			
 			if (param->parallelRead) {
-				busOutputCM->CalculateLatency((weightMatrixCol/param->numColPerSynapse*log2((double)param->levelOutput)*numInVector/param->numBitInput)/(busOutputCM->numRow*busOutputCM->busWidth), partition3D[3]);
+				busOutputCM->CalculateLatency((weightMatrixCol/param->numColPerSynapse*log2((double)param->levelOutput)*numInVector/param->numBitInput)/(busOutputCM->numRow*busOutputCM->busWidth));
 				busOutputCM->CalculatePower(busOutputCM->numRow*busOutputCM->busWidth, (weightMatrixCol/param->numColPerSynapse*log2((double)param->levelOutput)*numInVector/param->numBitInput)/(busOutputCM->numRow*busOutputCM->busWidth));
 			} else {
-				busOutputCM->CalculateLatency((weightMatrixCol/param->numColPerSynapse*(log2((double)param->numRowSubArray)+param->cellBit-1)*numInVector/param->numBitInput)/(busOutputCM->numRow*busOutputCM->busWidth), partition3D[3]);
+				busOutputCM->CalculateLatency((weightMatrixCol/param->numColPerSynapse*(log2((double)param->numRowSubArray)+param->cellBit-1)*numInVector/param->numBitInput)/(busOutputCM->numRow*busOutputCM->busWidth));
 				busOutputCM->CalculatePower(busOutputCM->numRow*busOutputCM->busWidth, (weightMatrixCol/param->numColPerSynapse*(log2((double)param->numRowSubArray)+param->cellBit-1)*numInVector/param->numBitInput)/(busOutputCM->numRow*busOutputCM->busWidth));
 			}
 

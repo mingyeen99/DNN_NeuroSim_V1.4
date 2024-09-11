@@ -59,7 +59,7 @@ public:
 	void Initialize(int _numBit, int _numComparator);
 	void CalculateUnitArea(AreaModify _option);
 	void CalculateArea(double widthArray);
-	void CalculateLatency(double _rampInput, double _capLoad, double numRead, int M3D);
+	void CalculateLatency(double _rampInput, double _capLoad, double numRead);
 	void CalculatePower(double numRead, int numComparatorPerOperation);
 
 	/* Properties */

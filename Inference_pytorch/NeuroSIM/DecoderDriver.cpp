@@ -62,9 +62,9 @@ void DecoderDriver::Initialize(int _mode, int _numOutput /* # of array rows/colu
 
 	// TG
 	resTg = cell.resMemCellOn / numLoad * IR_DROP_TOLERANCE;
-	widthTgN = CalculateOnResistance(tech.featureSize, NMOS, inputParameter.temperature, tech, 0)
+	widthTgN = CalculateOnResistance(tech.featureSize, NMOS, inputParameter.temperature, tech)
 				* tech.featureSize / (resTg*2);
-	widthTgP = CalculateOnResistance(tech.featureSize, PMOS, inputParameter.temperature, tech, 0)
+	widthTgP = CalculateOnResistance(tech.featureSize, PMOS, inputParameter.temperature, tech)
 				* tech.featureSize / (resTg*2);;
 	
 	initialized = true;

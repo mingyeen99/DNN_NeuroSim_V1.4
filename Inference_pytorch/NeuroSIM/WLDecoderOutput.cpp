@@ -142,8 +142,8 @@ void WLDecoderOutput::CalculateArea(double _newHeight, double _newWidth, AreaMod
 		// Resistance
 		// TG
 		double resTgN, resTgP;
-		resTgN = CalculateOnResistance(widthTgN, NMOS, inputParameter.temperature, tech, 0);
-		resTgP = CalculateOnResistance(widthTgP, PMOS, inputParameter.temperature, tech, 0);
+		resTgN = CalculateOnResistance(widthTgN, NMOS, inputParameter.temperature, tech);
+		resTgP = CalculateOnResistance(widthTgP, PMOS, inputParameter.temperature, tech);
 		resTg = 1/(1/resTgN + 1/resTgP);
 
 		// Capacitance
@@ -160,7 +160,7 @@ void WLDecoderOutput::CalculateArea(double _newHeight, double _newWidth, AreaMod
 	}
 }
 
-void WLDecoderOutput::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numRead, double numWrite, int M3D) {
+void WLDecoderOutput::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numRead, double numWrite) {
 	if (!initialized) {
 		cout << "[WLDecoderOutput] Error: Require initialization first!" << endl;
 	} else {
@@ -177,7 +177,7 @@ void WLDecoderOutput::CalculateLatency(double _rampInput, double _capLoad, doubl
 		double beta;	/* for horowitz calculation */
 		
 		// 1st stage: NOR2
-		resPullUp = CalculateOnResistance(widthNorP, PMOS, inputParameter.temperature, tech, M3D) * 2;
+		resPullUp = CalculateOnResistance(widthNorP, PMOS, inputParameter.temperature, tech) * 2;
 		tr = resPullUp * (capNorOutput + capInvInput + capTgGateP + capNmosGate);
 		gm = CalculateTransconductance(widthNorP, PMOS, tech);
 		beta = 1 / (resPullUp * gm);

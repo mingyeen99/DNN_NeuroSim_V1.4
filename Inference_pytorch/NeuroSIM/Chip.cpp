@@ -55,6 +55,7 @@
 #include "formula.h"
 #include "Param.h"
 #include "Chip.h"
+#include "TSVPath.h"
 
 using namespace std;
 
@@ -69,17 +70,28 @@ AdderTree *Gaccumulation;
 Sigmoid *Gsigmoid;
 BitShifter *GreLu;
 MaxPooling *maxPool;
+TSVPath *tsvPath;
  
 
-vector<int> ChipDesignInitialize(InputParameter& inputParameter, Technology& tech, MemCell& cell, bool pip, const vector<vector<double> > &netStructure,
+vector<int> ChipDesignInitialize(InputParameter& inputParameter, Technology& tech, Technology& techTop, Technology& techBottom, MemCell& cell, bool pip, const vector<vector<double> > &netStructure,
 					double *maxPESizeNM, double *maxTileSizeCM, double *numPENM){
 
-	globalBuffer = new Buffer(inputParameter, tech, cell);
-	GhTree = new HTree(inputParameter, tech, cell);
-	Gaccumulation = new AdderTree(inputParameter, tech, cell);
-	Gsigmoid = new Sigmoid(inputParameter, tech, cell);
-	GreLu = new BitShifter(inputParameter, tech, cell);
-	maxPool = new MaxPooling(inputParameter, tech, cell);
+	if (param->H3D) {
+		globalBuffer = new Buffer(inputParameter, techBottom, cell);
+		GhTree = new HTree(inputParameter, techBottom, cell);
+		Gaccumulation = new AdderTree(inputParameter, techBottom, cell);
+		Gsigmoid = new Sigmoid(inputParameter, techBottom, cell);
+		GreLu = new BitShifter(inputParameter, techBottom, cell);
+		maxPool = new MaxPooling(inputParameter, techBottom, cell);
+		tsvPath = new TSVPath(inputParameter, techBottom, cell);
+	} else {
+		globalBuffer = new Buffer(inputParameter, tech, cell);
+		GhTree = new HTree(inputParameter, tech, cell);
+		Gaccumulation = new AdderTree(inputParameter, tech, cell);
+		Gsigmoid = new Sigmoid(inputParameter, tech, cell);
+		GreLu = new BitShifter(inputParameter, tech, cell);
+		maxPool = new MaxPooling(inputParameter, tech, cell);
+	}
 
 	int numRowPerSynapse, numColPerSynapse;
 	numRowPerSynapse = param->numRowPerSynapse;
@@ -354,11 +366,11 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 }
 
 
-void ChipInitialize(InputParameter& inputParameter, Technology& tech, MemCell& cell, const vector<vector<double> > &netStructure, const vector<int > &markNM, const vector<vector<double> > &numTileEachLayer,
+void ChipInitialize(InputParameter& inputParameter, Technology& tech, Technology& techTop, Technology& techBottom, MemCell& cell, const vector<vector<double> > &netStructure, const vector<int > &markNM, const vector<vector<double> > &numTileEachLayer,
 					double numPENM, double desiredNumTileNM, double desiredPESizeNM, double desiredNumTileCM, double desiredTileSizeCM, double desiredPESizeCM, int numTileRow, int numTileCol) { 
 
 	/*** Initialize Tile ***/
-	TileInitialize(inputParameter, tech, cell, numPENM, desiredPESizeNM, ceil((double)(desiredTileSizeCM)/(double)(desiredPESizeCM)), desiredPESizeCM);
+	TileInitialize(inputParameter, tech, techTop, techBottom, cell, numPENM, desiredPESizeNM, ceil((double)(desiredTileSizeCM)/(double)(desiredPESizeCM)), desiredPESizeCM);
 
 	// find max layer and define the global buffer: enough to hold the max layer inputs
 	double maxLayerInput = 0;
@@ -383,7 +395,7 @@ void ChipInitialize(InputParameter& inputParameter, Technology& tech, MemCell& c
 				globalBusWidth += ((desiredPESizeNM)*ceil((double)sqrt(numPENM))+(desiredPESizeNM)*ceil((double)sqrt(numPENM))/param->numColMuxed)*numTileEachLayer[0][i]*numTileEachLayer[1][i];
 			}
 		}
-		
+	
 		
 		if (numTileEachLayer[0][i] > maxTileAdded) {
 			maxTileAdded = numTileEachLayer[0][i];
@@ -405,6 +417,10 @@ void ChipInitialize(InputParameter& inputParameter, Technology& tech, MemCell& c
 	maxPool->Initialize(param->numBitInput, 2*2, (desiredTileSizeCM), param->clkFreq);
 	GhTree->Initialize((numTileRow), (numTileCol), param->globalBusDelayTolerance, globalBusWidth, param->clkFreq);
 	
+	if (param->H3D) {
+		tsvPath->Initialize();
+	}
+
 	//activation inside Tile or outside?
 	if (param->chipActivation) {
 		int maxThroughputTile, maxAddFromSubArray;
@@ -540,9 +556,6 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 	double globalBufferHeight = numTileRow*max(NMheight, CMheight);
 	double globalBufferWidth = globalBufferArea/globalBufferHeight;														
 	GhTree->CalculateArea(max(NMheight, CMheight), max(NMwidth, CMwidth), param->treeFoldedRatio);
-	if (param->M3D) {
-		GhTree->area /=2;
-	}
 	maxPool->CalculateUnitArea(NONE);
 	maxPool->CalculateArea(globalBufferWidth);
 	Gaccumulation->CalculateArea(NULL, globalBufferHeight/3, NONE);
@@ -571,6 +584,12 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 	areaResults.push_back(areaAccum + Gaccumulation->area);
 	areaResults.push_back(areaOther + globalBufferArea + maxPool->area + areaGreLu + areaGsigmoid);
 	areaResults.push_back(areaArray);
+	areaResults.push_back(globalBufferArea + GhTree->area + maxPool->area + Gaccumulation->area);
+	
+	if (param->H3D) {
+		tsvPath->CalculateArea(NULL, NULL, NONE);
+		areaResults.push_back(tsvPath->area);
+	}
 	
 	*height = sqrt(area);
 	*width = area/(*height);
@@ -581,7 +600,7 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 
 double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech, MemCell& cell, int layerNumber, const string &newweightfile, const string &oldweightfile, const string &inputfile, bool followedByMaxPool, 
 							const vector<vector<double> > &netStructure, const vector<int> &markNM, const vector<vector<double> > &numTileEachLayer, const vector<vector<double> > &utilizationEachLayer, 
-							const vector<vector<double> > &speedUpEachLayer, const vector<vector<double> > &tileLocaEachLayer, const vector<int> &partition3D, double numPENM, double desiredPESizeNM, double desiredTileSizeCM, 
+							const vector<vector<double> > &speedUpEachLayer, const vector<vector<double> > &tileLocaEachLayer, const vector<int> &tierLocationEachLayer, double numPENM, double desiredPESizeNM, double desiredTileSizeCM, 
 							double desiredPESizeCM, double CMTileheight, double CMTilewidth, double NMTileheight, double NMTilewidth,
 							double *readLatency, double *readDynamicEnergy, double *leakage, double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy, 
 							double *coreLatencyADC, double *coreLatencyAccum, double *coreLatencyOther, double *coreEnergyADC, double *coreEnergyAccum, double *coreEnergyOther, bool CalculateclkFreq, double *clkPeriod) {
@@ -653,7 +672,7 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 				vector<vector<double> > tileInput;
 				tileInput = CopyInput(inputVector, i*desiredTileSizeCM, numInVector*param->numBitInput, numRowMatrix);
 				
-				TileCalculatePerformance(tileMemory, tileMemory, tileInput, partition3D, markNM[l], ceil((double)desiredTileSizeCM/(double)desiredPESizeCM), desiredPESizeCM, speedUpEachLayer[0][l], speedUpEachLayer[1][l], 
+				TileCalculatePerformance(tileMemory, tileMemory, tileInput, markNM[l], ceil((double)desiredTileSizeCM/(double)desiredPESizeCM), desiredPESizeCM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
 									numRowMatrix, numColMatrix, numInVector*param->numBitInput, cell, &tileReadLatency, &tileReadDynamicEnergy, &tileLeakage,
 									&tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy, 
 									&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther, CalculateclkFreq, clkPeriod);
@@ -684,7 +703,7 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 					*coreLatencyOther += GreLu->readLatency;
 					*coreEnergyOther += GreLu->readDynamicEnergy;
 				} else {
-					Gsigmoid->CalculateLatency(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry), partition3D[2]);
+					Gsigmoid->CalculateLatency(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry));
 					Gsigmoid->CalculatePower(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry));
 					*readLatency += Gsigmoid->readLatency;
 					*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
@@ -694,7 +713,7 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 			}
 			
 			if (numTileEachLayer[0][l] > 1) {   
-				Gaccumulation->CalculateLatency(ceil(numTileEachLayer[1][l]*netStructure[l][5]*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0, partition3D[1]);
+				Gaccumulation->CalculateLatency(ceil(numTileEachLayer[1][l]*netStructure[l][5]*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0);
 				Gaccumulation->CalculatePower(ceil(numTileEachLayer[1][l]*netStructure[l][5]*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l]);
 				*readLatency += Gaccumulation->readLatency;
 				*readDynamicEnergy += Gaccumulation->readDynamicEnergy;
@@ -704,7 +723,7 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 			
 			// if this layer is followed by Max Pool
 			if (followedByMaxPool) {
-				maxPool->CalculateLatency(1e20, 0, ceil((double) (numInVector/(double) maxPool->window)/(double) desiredTileSizeCM), partition3D[2]);
+				maxPool->CalculateLatency(1e20, 0, ceil((double) (numInVector/(double) maxPool->window)/(double) desiredTileSizeCM));
 				maxPool->CalculatePower(ceil((double) (numInVector/maxPool->window)/(double) desiredTileSizeCM));
 				*readLatency += maxPool->readLatency;
 				*readDynamicEnergy += maxPool->readDynamicEnergy;
@@ -715,17 +734,17 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 			double numBitToLoadOut = weightMatrixRow*param->numBitInput*numInVector;
 			double numBitToLoadIn = ceil(weightMatrixCol/param->numColPerSynapse)*param->numBitInput*numInVector/(netStructure[l][6]? 4:1);
 			
-			if (param->M3D) {
-				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight/2, CMTilewidth/2, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth), partition3D[3]);
-				GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight/2, CMTilewidth/2, GhTree->busWidth, 
+			if (param->H3D) {
+				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight/param->numMemTier, CMTilewidth/param->numMemTier, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
+				GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight/param->numMemTier, CMTilewidth/param->numMemTier, GhTree->busWidth, 
 								ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
 			} else {
-				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth), partition3D[3]);
+				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
 				GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, GhTree->busWidth, 
 								ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
 			}
 			globalBuffer->CalculateLatency(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
-									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width, partition3D[2]);
+									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
 			globalBuffer->CalculatePower(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
 									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
 			
@@ -735,6 +754,11 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 			// each time, only a part of the ic is used to transfer data to a part of the tiles
 			globalBuffer->readLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));
 			globalBuffer->writeLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));
+			
+			if (param->H3D) {
+				tsvPath->CalculateLatency(tierLocationEachLayer[l], (numBitToLoadIn+numBitToLoadOut));
+				tsvPath->CalculatePower(tierLocationEachLayer[l],numBitToLoadIn+numBitToLoadOut);
+			}
 		}
 	} else {   // novel Mapping
 		for (int i=0; i<ceil((double) netStructure[l][2]*(double) numRowPerSynapse/(double) desiredPESizeNM); i++) {       // # of tiles in row
@@ -769,7 +793,7 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 									(int) netStructure[l][2]*numRowPerSynapse/numtileEachLayerRow, numPENM, (int) netStructure[l][2]*numRowPerSynapse);
 	
 				
-				TileCalculatePerformance(tileMemory, tileMemory, tileInput, partition3D, markNM[l], numPENM, desiredPESizeNM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
+				TileCalculatePerformance(tileMemory, tileMemory, tileInput, markNM[l], numPENM, desiredPESizeNM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
 									numRowMatrix, numColMatrix, numInVector*param->numBitInput, cell, 
 									&tileReadLatency, &tileReadDynamicEnergy, &tileLeakage, &tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy,
 									&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther, CalculateclkFreq, clkPeriod);
@@ -801,7 +825,7 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 					*coreLatencyOther += GreLu->readLatency;
 					*coreEnergyOther += GreLu->readDynamicEnergy;
 				} else {
-					Gsigmoid->CalculateLatency(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry), partition3D[2]);
+					Gsigmoid->CalculateLatency(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry));
 					Gsigmoid->CalculatePower(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry));
 					*readLatency += Gsigmoid->readLatency;
 					*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
@@ -811,7 +835,7 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 			}
 			
 			if (numTileEachLayer[0][l] > 1) {   
-				Gaccumulation->CalculateLatency(ceil(numTileEachLayer[1][l]*netStructure[l][5]*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0, partition3D[1]);
+				Gaccumulation->CalculateLatency(ceil(numTileEachLayer[1][l]*netStructure[l][5]*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0);
 				Gaccumulation->CalculatePower(ceil(numTileEachLayer[1][l]*netStructure[l][5]*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l]);
 				*readLatency += Gaccumulation->readLatency;
 				*readDynamicEnergy += Gaccumulation->readDynamicEnergy;
@@ -821,7 +845,7 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 			
 			// if this layer is followed by Max Pool
 			if (followedByMaxPool) {
-				maxPool->CalculateLatency(1e20, 0, ceil((double) (numInVector/(double) maxPool->window)/(double) desiredPESizeNM*sqrt((double) numPENM)), partition3D[2]);
+				maxPool->CalculateLatency(1e20, 0, ceil((double) (numInVector/(double) maxPool->window)/(double) desiredPESizeNM*sqrt((double) numPENM)));
 				maxPool->CalculatePower(ceil((double) (numInVector/maxPool->window)/(double) desiredPESizeNM*sqrt((double) numPENM)));
 				*readLatency += maxPool->readLatency;
 				*readDynamicEnergy += maxPool->readDynamicEnergy;
@@ -831,17 +855,17 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 			double numBitToLoadOut = weightMatrixRow*param->numBitInput*numInVector/netStructure[l][3];
 			double numBitToLoadIn = ceil(weightMatrixCol/param->numColPerSynapse)*param->numBitInput*numInVector/(netStructure[l][6]? 4:1);
 			
-			if (param->M3D) {
-				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight/2, NMTilewidth/2, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth), partition3D[3]);
-				GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight/2, NMTilewidth/2, GhTree->busWidth, 
+			if (param->H3D) {
+				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight/param->numMemTier, NMTilewidth/param->numMemTier, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
+				GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight/param->numMemTier, NMTilewidth/param->numMemTier, GhTree->busWidth, 
 								ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
 			} else {
-				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth), partition3D[3]);
+				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
 				GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, GhTree->busWidth, 
 								ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
 			}
 			globalBuffer->CalculateLatency(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
-									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width, partition3D[2]);
+									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
 			globalBuffer->CalculatePower(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
 									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
 			// since multi-core buffer has improve the parallelism
@@ -849,7 +873,12 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 			globalBuffer->writeLatency /= MIN(numBufferCore, ceil(globalBusWidth/globalBuffer->interface_width));
 			// each time, only a part of the ic is used to transfer data to a part of the tiles
 			globalBuffer->readLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));
-			globalBuffer->writeLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));	
+			globalBuffer->writeLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));
+
+			if (param->H3D) {
+				tsvPath->CalculateLatency(tierLocationEachLayer[l], (numBitToLoadIn+numBitToLoadOut));
+				tsvPath->CalculatePower(tierLocationEachLayer[l],numBitToLoadIn+numBitToLoadOut);
+			}
 		}
 	}		
 	if(!CalculateclkFreq){
@@ -862,6 +891,16 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 		*readDynamicEnergy += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy + GhTree->readDynamicEnergy;
 		*coreLatencyOther += globalBuffer->readLatency + globalBuffer->writeLatency + GhTree->readLatency;
 		*coreEnergyOther += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy + GhTree->readDynamicEnergy;
+		
+		if (param->H3D) {
+			*icLatency += tsvPath->readLatency;
+			*icDynamicEnergy += tsvPath->readDynamicEnergy;
+			
+			*readLatency += tsvPath->readLatency;
+			*readDynamicEnergy += tsvPath->readDynamicEnergy;
+			*coreLatencyOther += tsvPath->readLatency;
+			*coreEnergyOther += tsvPath->readDynamicEnergy;
+		}
 
 		*leakage = tileLeakage;
 	}

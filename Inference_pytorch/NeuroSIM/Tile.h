@@ -52,10 +52,10 @@
 using namespace std;
 
 /*** Functions ***/
-void TileInitialize(InputParameter& inputParameter, Technology& tech, MemCell& cell, double _numPENM, double _peSizeNM, double _numPECM, double _peSizeCM);
+void TileInitialize(InputParameter& inputParameter, Technology& tech, Technology& techTop, Technology& techBottom, MemCell& cell, double _numPENM, double _peSizeNM, double _numPECM, double _peSizeCM);
 vector<double> TileCalculateArea(double numPE, double peSize, bool NMTile, double *height, double *width);
 void TileCalculatePerformance(const vector<vector<double> > &newMemory, const vector<vector<double> > &oldMemory, const vector<vector<double> > &inputVector, 
-			const vector<int> &partition3D, int novelMap, double numPE, double peSize, 
+			int novelMap, double numPE, double peSize, 
 			int speedUpRow, int speedUpCol, int weightMatrixRow, int weightMatrixCol, int numInVector, MemCell& cell, double *readLatency, double *readDynamicEnergy, double *leakage,
 			double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy,
 			double *coreLatencyADC, double *coreLatencyAccum, double *coreLatencyOther, double *coreEnergyADC, double *coreEnergyAccum, double *coreEnergyOther, bool CalculateclkFreq, double*clkPeriod);

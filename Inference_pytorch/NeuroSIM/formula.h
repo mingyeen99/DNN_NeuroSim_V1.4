@@ -69,7 +69,7 @@ double CalculateGateLeakage(
 		double widthNMOS, double widthPMOS,
 		double temperature, Technology tech);
 
-double CalculateOnResistance(double width, int type, double temperature, Technology tech, int M3D);
+double CalculateOnResistance(double width, int type, double temperature, Technology tech);
 
 double CalculateTransconductance(double width, int type, Technology tech);
 

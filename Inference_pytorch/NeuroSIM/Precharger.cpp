@@ -119,7 +119,7 @@ void Precharger::CalculateArea(double _newHeight, double _newWidth, AreaModify _
 	}
 }
 
-void Precharger::CalculateLatency(double _rampInput, double _capLoad, double numRead, double numWrite, int M3D){
+void Precharger::CalculateLatency(double _rampInput, double _capLoad, double numRead, double numWrite){
 	if (!initialized) {
 		cout << "[Precharger] Error: Require initialization first!" << endl;
 	} else {
@@ -134,7 +134,7 @@ void Precharger::CalculateLatency(double _rampInput, double _capLoad, double num
 		double resPullUp;
 		double tau;
 
-		resPullUp = CalculateOnResistance(widthPMOSBitlinePrecharger, PMOS, inputParameter.temperature, tech, M3D);
+		resPullUp = CalculateOnResistance(widthPMOSBitlinePrecharger, PMOS, inputParameter.temperature, tech);
 		tau = resPullUp * (capLoad + capOutputBitlinePrecharger) + resLoad * capLoad / 2;
 		gm = CalculateTransconductance(widthPMOSBitlinePrecharger, PMOS, tech);
 		beta = 1 / (resPullUp * gm);

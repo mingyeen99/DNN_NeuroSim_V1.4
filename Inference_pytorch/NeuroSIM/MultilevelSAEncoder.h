@@ -57,7 +57,7 @@ public:
 	void PrintProperty(const char* str);
 	void Initialize(int _numLevel, int _numEncoder);
 	void CalculateArea(double _newHeight, double _newWidth, AreaModify _option);
-	void CalculateLatency(double _rampInput, double numRead, int M3D);
+	void CalculateLatency(double _rampInput, double numRead);
 	void CalculatePower(double numRead);
 
 	/* Properties */

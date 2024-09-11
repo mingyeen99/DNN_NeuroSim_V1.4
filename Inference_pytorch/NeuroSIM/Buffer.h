@@ -65,7 +65,7 @@ public:
 	void PrintMagicProperty();
 	void Initialize(int _numBit, int _interface_width, int _num_interface, double _unitWireRes, double _clkFreq, bool _SRAM);
 	void CalculateArea(double _newHeight, double _newWidth, AreaModify _option);
-	void CalculateLatency(double numAccessBit, double numRead, double numAccessBitWrite, double numWrite, int M3D);
+	void CalculateLatency(double numAccessBit, double numRead, double numAccessBitWrite, double numWrite);
 	void CalculatePower(double numAccessBit, double numRead, double numAccessBitWrite, double numWrite);
 
 	/* Properties */

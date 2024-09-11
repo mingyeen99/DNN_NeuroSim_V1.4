@@ -66,7 +66,7 @@ public:
 	void Initialize(bool _SRAM, int _numYbit, int _numEntry, int _numFunction, double _clkFreq);
 	void CalculateUnitArea(AreaModify _option);
 	void CalculateArea(double _newHeight, double _newWidth, AreaModify _option);
-	void CalculateLatency(double numRead, int M3D);
+	void CalculateLatency(double numRead);
 	void CalculatePower(double numRead);
 
 	/* Properties */

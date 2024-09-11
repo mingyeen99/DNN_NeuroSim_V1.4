@@ -71,7 +71,7 @@ void NewSwitchMatrix::Initialize(int _numOutput, double _activityRowRead, double
 	widthTgN = MIN_NMOS_SIZE * tech.featureSize;
 	widthTgP = tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize;
 	EnlargeSize(&widthTgN, &widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech);
-	resTg = CalculateOnResistance(widthTgN, NMOS, 300, tech, 0) * LINEAR_REGION_RATIO;
+	resTg = CalculateOnResistance(widthTgN, NMOS, inputParameter.temperature, tech) * LINEAR_REGION_RATIO;
 	
 	initialized = true;
 }

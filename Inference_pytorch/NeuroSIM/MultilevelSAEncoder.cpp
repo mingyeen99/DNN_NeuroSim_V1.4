@@ -132,7 +132,7 @@ void MultilevelSAEncoder::CalculateArea(double _newHeight, double _newWidth, Are
 	}
 }
 
-void MultilevelSAEncoder::CalculateLatency(double _rampInput, double numRead, int M3D){
+void MultilevelSAEncoder::CalculateLatency(double _rampInput, double numRead){
 	if (!initialized) {
 		cout << "[MultilevelSAEncoder] Error: Require initialization first!" << endl;
 	} else {
@@ -148,28 +148,28 @@ void MultilevelSAEncoder::CalculateLatency(double _rampInput, double numRead, in
 		ramp[0] = rampInput;
 
 		// 1st INV to NAND2
-		resPullDown = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech, M3D) * 2;
+		resPullDown = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech) * 2;
 		tr = resPullDown * (capInvOutput + capNandInput * 2);
 		gm = CalculateTransconductance(widthNandN, NMOS, tech);
 		beta = 1 / (resPullDown * gm);
 		readLatency += horowitz(tr, beta, ramp[0], &ramp[1]);
 		
 		// 2nd NAND2 to Large NAND
-		resPullUp = CalculateOnResistance(widthNandP, PMOS, inputParameter.temperature, tech, M3D);
+		resPullUp = CalculateOnResistance(widthNandP, PMOS, inputParameter.temperature, tech);
 		tr = resPullUp * (capNandOutput + capNandLgInput * numInput);
 		gm = CalculateTransconductance(widthNandP, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
 		readLatency += horowitz(tr, beta, ramp[1], &ramp[2]);
 		
 		// 3rd large NAND to INV
-		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech, M3D) * 2;
+		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech) * 2;
 		tr = resPullDown * (capNandLgOutput + capInvInput);
 		gm = CalculateTransconductance(widthNandN, NMOS, tech);
 		beta = 1 / (resPullDown * gm);
 		readLatencyIntermediate += horowitz(tr, beta, ramp[2], &ramp[3]);
 
 		// 4th INV
-		resPullUp = CalculateOnResistance(widthInvP, PMOS, inputParameter.temperature, tech, M3D);
+		resPullUp = CalculateOnResistance(widthInvP, PMOS, inputParameter.temperature, tech);
 		tr = resPullUp * capInvOutput;
 		gm = CalculateTransconductance(widthNandP, PMOS, tech);
 		beta = 1 / (resPullUp * gm);

@@ -46,7 +46,6 @@
 
 using namespace std;
 
-
 /* Beyond 22 nm technology, the value capIdealGate is the sum of capIdealGate and capOverlap and capFringe */
 double CalculateGateCap(double width, Technology tech) {
 	double widthEff = 0;
@@ -476,7 +475,7 @@ double CalculateGateLeakage(
     }
 }
 
-double CalculateOnResistance(double width, int type, double temperature, Technology tech, int M3D) {
+double CalculateOnResistance(double width, int type, double temperature, Technology tech) {
     double r;
     int tempIndex = (int)temperature - 300;
     if ((tempIndex > 100) || (tempIndex < 0)) {
@@ -490,18 +489,10 @@ double CalculateOnResistance(double width, int type, double temperature, Technol
 		width *= tech.PitchFin/(2 * tech.featureSize);
 		widthEff = ceil(width/tech.PitchFin)*(2*tech.heightFin + tech.widthFin);
 	}
-	
-	if (M3D) {
-		if (type == NMOS)
-			r = tech.effectiveResistanceMultiplier * tech.vdd / (tech.currentOnNmosTop[tempIndex] * widthEff);
-		else
-			r = tech.effectiveResistanceMultiplier * tech.vdd / (tech.currentOnPmosTop[tempIndex] * widthEff);
-	} else {
-		if (type == NMOS)
-			r = tech.effectiveResistanceMultiplier * tech.vdd / (tech.currentOnNmos[tempIndex] * widthEff);
-		else
-			r = tech.effectiveResistanceMultiplier * tech.vdd / (tech.currentOnPmos[tempIndex] * widthEff);
-	}
+    if (type == NMOS)
+        r = tech.effectiveResistanceMultiplier * tech.vdd / (tech.currentOnNmos[tempIndex] * widthEff);
+    else
+        r = tech.effectiveResistanceMultiplier * tech.vdd / (tech.currentOnPmos[tempIndex] * widthEff);
 	
     return r;
 }

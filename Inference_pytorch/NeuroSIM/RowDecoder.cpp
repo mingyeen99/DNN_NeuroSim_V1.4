@@ -279,7 +279,7 @@ void RowDecoder::CalculateArea(double _newHeight, double _newWidth, AreaModify _
 	}
 }
 
-void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _capLoad2, double numRead, double numWrite, int M3D) {
+void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _capLoad2, double numRead, double numWrite) {
 	if (!initialized) {
 		cout << "[Row Decoder Latency] Error: Require initialization first!" << endl;
 	} else {
@@ -298,7 +298,7 @@ void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _c
 		double rampNorOutput = 1e20;
 
 		// INV
-		resPullDown = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech, M3D);	// doesn't matter pullup/pulldown?
+		resPullDown = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech);	// doesn't matter pullup/pulldown?
 		if (numNand)
 			tr = resPullDown * (capInvOutput + capNandInput * 2);	// one address line connects to 2 NAND inputs
 		else
@@ -312,7 +312,7 @@ void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _c
 
 		// NAND2
 		if (numNand) {
-			resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech, M3D) * 2;
+			resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech) * 2;
 			if (numNor)
 				tr = resPullDown * (capNandOutput + capNorInput * numNor/4);
 			else
@@ -327,7 +327,7 @@ void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _c
 	
 		// NOR (ceil(N/2) inputs)
 		if (numNor) {
-			resPullUp = CalculateOnResistance(widthNorP, PMOS, inputParameter.temperature, tech, M3D) * 2;
+			resPullUp = CalculateOnResistance(widthNorP, PMOS, inputParameter.temperature, tech) * 2;
 			if (MUX)
 				tr = resPullUp * (capNorOutput + capNandInput);
 			else
@@ -342,7 +342,7 @@ void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _c
 		// Output driver or Mux enable circuit
 		if (MUX) {	// Mux enable circuit (NAND + INV) + INV
 			// 1st NAND
-			resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech, M3D);
+			resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech);
 			tr = resPullDown * (capNandOutput + capInvInput);
 			gm = CalculateTransconductance(widthNandN, NMOS, tech);
 			beta = 1 / (resPullDown * gm);
@@ -350,7 +350,7 @@ void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _c
 			writeLatency += horowitz(tr, beta, rampNorOutput, &rampNandOutput);
 
 			// 2nd INV
-			resPullUp = CalculateOnResistance(widthDriverInvP, PMOS, inputParameter.temperature, tech, M3D);
+			resPullUp = CalculateOnResistance(widthDriverInvP, PMOS, inputParameter.temperature, tech);
 			tr = resPullUp * (capDriverInvOutput + capDriverInvInput + capLoad1);
 			gm = CalculateTransconductance(widthDriverInvP, PMOS, tech);
 			beta = 1 / (resPullUp * gm);
@@ -358,7 +358,7 @@ void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _c
 			writeLatency += horowitz(tr, beta, rampNandOutput, &rampInvOutput);
 
 			// 3rd INV
-			resPullDown = CalculateOnResistance(widthDriverInvN, NMOS, inputParameter.temperature, tech, M3D);
+			resPullDown = CalculateOnResistance(widthDriverInvN, NMOS, inputParameter.temperature, tech);
 			tr = resPullDown * (capDriverInvOutput + capLoad2);
 			gm = CalculateTransconductance(widthDriverInvN, NMOS, tech);
 			beta = 1 / (resPullDown * gm);
@@ -368,14 +368,14 @@ void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _c
 
 		} else {	// REGULAR: 2 INV as output driver
 			// 1st INV
-			resPullDown = CalculateOnResistance(widthDriverInvN, NMOS, inputParameter.temperature, tech, M3D);
+			resPullDown = CalculateOnResistance(widthDriverInvN, NMOS, inputParameter.temperature, tech);
 			tr = resPullDown * (capDriverInvOutput + capDriverInvInput);
 			gm = CalculateTransconductance(widthDriverInvN, NMOS, tech);
 			beta = 1 / (resPullDown * gm);
 			readLatency += horowitz(tr, beta, rampNorOutput, &rampInvOutput);
 			writeLatency += horowitz(tr, beta, rampNorOutput, &rampInvOutput);
 			// 2nd INV
-			resPullUp = CalculateOnResistance(widthDriverInvP, PMOS, inputParameter.temperature, tech, M3D);
+			resPullUp = CalculateOnResistance(widthDriverInvP, PMOS, inputParameter.temperature, tech);
 			tr = resPullUp * (capDriverInvOutput + capLoad1);
 			gm = CalculateTransconductance(widthDriverInvP, PMOS, tech);
 			beta = 1 / (resPullUp * gm);

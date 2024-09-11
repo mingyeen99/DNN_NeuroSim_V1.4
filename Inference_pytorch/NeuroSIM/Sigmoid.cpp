@@ -155,23 +155,23 @@ void Sigmoid::CalculateArea(double _newHeight, double _newWidth, AreaModify _opt
 	}
 }
 
-void Sigmoid::CalculateLatency(double numRead, int M3D) {
+void Sigmoid::CalculateLatency(double numRead) {
 	if (!initialized) {
 		cout << "[Sigmoid] Error: Require initialization first!" << endl;
 	} else {
 		readLatency = 0;
 
-		double resCellAccess = CalculateOnResistance(cell.widthAccessCMOS * tech.featureSize, NMOS, inputParameter.temperature, tech, M3D);
+		double resCellAccess = CalculateOnResistance(cell.widthAccessCMOS * tech.featureSize, NMOS, inputParameter.temperature, tech);
 		double capCellAccess = CalculateDrainCap(cell.widthAccessCMOS * tech.featureSize, NMOS, cell.widthInFeatureSize * tech.featureSize, tech);
 		capSRAMCell = capCellAccess + CalculateDrainCap(cell.widthSRAMCellNMOS * tech.featureSize, NMOS, cell.widthInFeatureSize * tech.featureSize, tech) + CalculateDrainCap(cell.widthSRAMCellPMOS * tech.featureSize, PMOS, cell.widthInFeatureSize * tech.featureSize, tech);
 		
 		if (SRAM) {
-			wlDecoder.CalculateLatency(1e20, 0, capSRAMCell, 1, 1, M3D);
+			wlDecoder.CalculateLatency(1e20, 0, capSRAMCell, 1, 1);
 			senseAmp.CalculateLatency(1);
 			readLatency = wlDecoder.readLatency + senseAmp.readLatency;
 		} else {	// RRAM
 			// Assuming no delay on RRAM wires
-			wlDecoder.CalculateLatency(1e20, 0, capCellAccess, 1, 1, M3D);
+			wlDecoder.CalculateLatency(1e20, 0, capCellAccess, 1, 1);
 			voltageSenseAmp.CalculateLatency(0, 1);
 			readLatency = wlDecoder.readLatency + voltageSenseAmp.readLatency;
 		}

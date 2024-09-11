@@ -152,8 +152,8 @@ void WLNewDecoderDriver::CalculateArea(double _newHeight, double _newWidth, Area
 		// Resistance
 		// TG
 		double resTgN, resTgP;
-		resTgN = CalculateOnResistance(widthTgN, NMOS, inputParameter.temperature, tech, 0)*LINEAR_REGION_RATIO;
-		resTgP = CalculateOnResistance(widthTgP, PMOS, inputParameter.temperature, tech, 0)*LINEAR_REGION_RATIO;
+		resTgN = CalculateOnResistance(widthTgN, NMOS, inputParameter.temperature, tech)*LINEAR_REGION_RATIO;
+		resTgP = CalculateOnResistance(widthTgP, PMOS, inputParameter.temperature, tech)*LINEAR_REGION_RATIO;
 		resTg = 1/(1/resTgN + 1/resTgP);
 
 		// Capacitance
@@ -169,7 +169,7 @@ void WLNewDecoderDriver::CalculateArea(double _newHeight, double _newWidth, Area
 	}
 }
 
-void WLNewDecoderDriver::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numRead, double numWrite, int M3D) {
+void WLNewDecoderDriver::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numRead, double numWrite) {
 	if (!initialized) {
 		cout << "[WL New Decoder Driver] Error: Require initialization first!" << endl;
 	} else if (invalid) {
@@ -194,7 +194,7 @@ void WLNewDecoderDriver::CalculateLatency(double _rampInput, double _capLoad, do
 		//double rampNorOutput;
 		
 		// 1st stage: NAND2
-		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech, M3D) * 2;      // pulldown 2 NMOS in series
+		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech) * 2;      // pulldown 2 NMOS in series
 		trnand = resPullDown * (capNandOutput + capInvInput);          // connect to INV
 		gmnand = CalculateTransconductance(widthNandN, NMOS, tech);  
 		betanand = 1 / (resPullDown * gmnand);
@@ -202,7 +202,7 @@ void WLNewDecoderDriver::CalculateLatency(double _rampInput, double _capLoad, do
 		writeLatency += horowitz(trnand, betanand, rampInput, NULL);
 		
 		// 2ed stage: INV
-		resPullUp = CalculateOnResistance(widthInvP, PMOS, inputParameter.temperature, tech, M3D);
+		resPullUp = CalculateOnResistance(widthInvP, PMOS, inputParameter.temperature, tech);
 		trinv = resPullUp * (capInvOutput + 2 * capNandInput);       // connect to 2 NAND2 gate
 		gminv = CalculateTransconductance(widthNandP, PMOS, tech);  
 		betainv = 1 / (resPullUp * gminv);
@@ -210,7 +210,7 @@ void WLNewDecoderDriver::CalculateLatency(double _rampInput, double _capLoad, do
 		writeLatency += horowitz(trinv, betainv, rampInput, NULL);
 		
 		// 3ed stage: NAND2
-		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech, M3D) * 2;      
+		resPullDown = CalculateOnResistance(widthNandN, NMOS, inputParameter.temperature, tech) * 2;      
 		trnand = resPullDown * (capNandOutput + capTgGateP + capTgGateN);      // connect to 2 transmission gates
 		gmnand = CalculateTransconductance(widthNandN, NMOS, tech);  
 		betanand = 1 / (resPullDown * gmnand);

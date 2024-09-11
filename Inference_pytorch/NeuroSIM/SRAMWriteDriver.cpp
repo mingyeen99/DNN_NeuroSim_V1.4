@@ -115,7 +115,7 @@ void SRAMWriteDriver::CalculateArea(double _newHeight, double _newWidth, AreaMod
 	}
 }
 
-void SRAMWriteDriver::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numWrite, int M3D){
+void SRAMWriteDriver::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numWrite){
 	if (!initialized) {
 		cout << "[SRAMWriteDriver] Error: Require initialization first!" << endl;
 	} else {
@@ -130,14 +130,14 @@ void SRAMWriteDriver::CalculateLatency(double _rampInput, double _capLoad, doubl
 		double rampInvOutput;
 		
 		// 1st stage INV (Pullup)
-		resPullUp = CalculateOnResistance(widthInvP, PMOS, inputParameter.temperature, tech, M3D);
+		resPullUp = CalculateOnResistance(widthInvP, PMOS, inputParameter.temperature, tech);
 		tr = resPullUp * (capInvOutput + capInvInput);
 		gm = CalculateTransconductance(widthInvP, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
 		writeLatency += horowitz(tr, beta, rampInput, &rampInvOutput);
 		
 		// 2nd stage INV (Pulldown)
-		resPullDown = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech, M3D);
+		resPullDown = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech);
 		tr = resPullDown * (capLoad + capInvOutput) + resLoad * capLoad / 2;
 		gm = CalculateTransconductance(widthInvN, NMOS, tech);
 		beta = 1 / (resPullDown * gm);

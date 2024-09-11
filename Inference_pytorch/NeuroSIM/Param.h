@@ -51,11 +51,15 @@ public:
 	
 	int relaxArrayCellHeight, relaxArrayCellWidth;
 	
-	bool globalBufferType, tileBufferType, peBufferType, chipActivation, reLu, novelMapping, pipeline, SARADC, currentMode, validated, synchronous, M3D;
+	bool globalBufferType, tileBufferType, peBufferType, chipActivation, reLu, novelMapping, pipeline, SARADC, currentMode, validated, synchronous, H3D;
 	int globalBufferCoreSizeRow, globalBufferCoreSizeCol, tileBufferCoreSizeRow, tileBufferCoreSizeCol;																								
 	
 	double clkFreq, featuresize, readNoise, resistanceOn, resistanceOff, maxConductance, minConductance;
 	int temp, technode, wireWidth, multipleCells;
+	/* for Heterogeneous 3D */
+	int technodeTop, deviceroadmapTop, technodeBottom, deviceroadmapBottom, numMemTier;
+	double featuresizeTop, featuresizeBottom, tsvPitch, tsvRes, tsvCap;
+	
 	double maxNumLevelLTP, maxNumLevelLTD, readVoltage, readPulseWidth, writeVoltage;
 	double accessVoltage, resistanceAccess;
 	double nonlinearIV, nonlinearity;

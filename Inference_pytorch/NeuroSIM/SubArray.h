@@ -81,7 +81,7 @@ public:
 	void PrintProperty();
 	void Initialize(int _numRow, int _numCol, double _unitWireRes);
 	void CalculateArea();
-	void CalculateLatency(double _rampInput, const vector<double> &columnResistance, bool CalculateclkFreq, const vector<int> &partition3D);
+	void CalculateLatency(double _rampInput, const vector<double> &columnResistance, bool CalculateclkFreq);
 	void CalculatePower(const vector<double> &columnResistance);
 
 	/* Properties */	

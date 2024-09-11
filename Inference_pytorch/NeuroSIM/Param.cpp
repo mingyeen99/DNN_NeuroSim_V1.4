@@ -111,9 +111,9 @@ Param::Param() {
 								
 	synchronous = true;			// false: asynchronous
 								// true: synchronous, clkFreq will be decided by sensing delay
-								
-	M3D = true;                 // false: run 2D simulation
-								// true: run M3D simulation
+	
+	H3D = true;                 // false: conventional 2D
+	                            // true: heterogeneous 3D
 								
 	/*** algorithm weight range, the default wrapper (based on WAGE) has fixed weight range of (-1, 1) ***/
 	algoWeightMax = 1;
@@ -132,6 +132,19 @@ Param::Param() {
 	// technode: 10, 7   --> wireWidth: 18
 	technode = 22;                      // Technology
 	featuresize = 40e-9;                // Wire width for subArray simulation
+	
+	/* for Heterogeneous 3D */
+	deviceroadmapTop = 2;  
+	technodeTop = 22;
+	featuresizeTop = 40e-9;
+	deviceroadmapBottom = 2; 
+	technodeBottom = 7;
+	featuresizeBottom = 18e-9;
+	numMemTier = 4;
+	tsvPitch = 1.7e-6;
+	tsvRes = 0.3;
+	tsvCap = 20e-15;
+	
 	wireWidth = 40;                     // wireWidth of the cell for Accuracy calculation
 	globalBusDelayTolerance = 0.1;      // to relax bus delay for global H-Tree (chip level: communication among tiles), if tolerance is 0.1, the latency will be relax to (1+0.1)*optimalLatency (trade-off with energy)
 	localBusDelayTolerance = 0.1;       // to relax bus delay for global H-Tree (tile level: communication among PEs), if tolerance is 0.1, the latency will be relax to (1+0.1)*optimalLatency (trade-off with energy)

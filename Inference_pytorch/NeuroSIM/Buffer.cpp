@@ -130,7 +130,7 @@ void Buffer::CalculateArea(double _newHeight, double _newWidth, AreaModify _opti
 	}
 }
 
-void Buffer::CalculateLatency(double numAccessBitRead, double numRead, double numAccessBitWrite, double numWrite, int M3D){
+void Buffer::CalculateLatency(double numAccessBitRead, double numRead, double numAccessBitWrite, double numWrite){
 	if (!initialized) {
 		cout << "[Buffer] Error: Require initialization first!" << endl;
 	} else {
@@ -144,13 +144,13 @@ void Buffer::CalculateLatency(double numAccessBitRead, double numRead, double nu
 			writeLatency = numWrite;
 		} else {
 			if (SRAM) {
-				wlDecoder.CalculateLatency(1e20, lengthRow * 0.2e-15/1e-6, NULL, (double) numBit/interface_width, (double) numBit/interface_width, M3D);
-				precharger.CalculateLatency(1e20, lengthCol * 0.2e-15/1e-6, (double) numBit/interface_width, (double) numBit/interface_width, M3D);
-				sramWriteDriver.CalculateLatency(1e20, lengthCol * 0.2e-15/1e-6, lengthCol * unitWireRes, (double) numBit/interface_width, M3D);
+				wlDecoder.CalculateLatency(1e20, lengthRow * 0.2e-15/1e-6, NULL, (double) numBit/interface_width, (double) numBit/interface_width);
+				precharger.CalculateLatency(1e20, lengthCol * 0.2e-15/1e-6, (double) numBit/interface_width, (double) numBit/interface_width);
+				sramWriteDriver.CalculateLatency(1e20, lengthCol * 0.2e-15/1e-6, lengthCol * unitWireRes, (double) numBit/interface_width);
 				
-				double resCellAccess = CalculateOnResistance(param->widthAccessCMOS * tech.featureSize, NMOS, inputParameter.temperature, tech, M3D);
+				double resCellAccess = CalculateOnResistance(param->widthAccessCMOS * tech.featureSize, NMOS, inputParameter.temperature, tech);
 				double capCellAccess = CalculateDrainCap(param->widthAccessCMOS * tech.featureSize, NMOS, param->widthInFeatureSizeSRAM * tech.featureSize, tech);
-				double resPullDown = CalculateOnResistance(param->widthSRAMCellNMOS * tech.featureSize, NMOS, inputParameter.temperature, tech, M3D);
+				double resPullDown = CalculateOnResistance(param->widthSRAMCellNMOS * tech.featureSize, NMOS, inputParameter.temperature, tech);
 				double tau = (resCellAccess + resPullDown) * (capCellAccess + lengthCol * 0.2e-15/1e-6) + lengthCol * unitWireRes * (lengthCol * 0.2e-15/1e-6) / 2;
 				tau *= log(tech.vdd / (tech.vdd - param->minSenseVoltage / 2));   
 				double gm = CalculateTransconductance(param->widthAccessCMOS * tech.featureSize, NMOS, tech);
@@ -160,7 +160,7 @@ void Buffer::CalculateLatency(double numAccessBitRead, double numRead, double nu
 				readWholeLatency += wlDecoder.readLatency + precharger.readLatency + colDelay;
 				writeWholeLatency += wlDecoder.writeLatency + precharger.writeLatency + sramWriteDriver.writeLatency;
 			} else {
-				wlDecoder.CalculateLatency(1e20, dff.hDff * interface_width * 0.2e-15/1e-6, NULL, (double) numBit/interface_width, (double) numBit/interface_width, M3D);
+				wlDecoder.CalculateLatency(1e20, dff.hDff * interface_width * 0.2e-15/1e-6, NULL, (double) numBit/interface_width, (double) numBit/interface_width);
 				readWholeLatency += wlDecoder.readLatency;
 				readWholeLatency += ((double) 1/clkFreq/2)*((double) numBit/interface_width);  // assume dff need half clock cycle to access
 				writeWholeLatency += wlDecoder.writeLatency + ((double) 1/clkFreq/2)*((double) numBit/interface_width);
@@ -170,7 +170,7 @@ void Buffer::CalculateLatency(double numAccessBitRead, double numRead, double nu
 			readLatency = avgBitReadLatency*numRead;
 			writeLatency = avgBitWriteLatency*numWrite;
 		}
-	} 
+	}
 }
 
 void Buffer::CalculatePower(double numAccessBitRead, double numRead, double numAccessBitWrite, double numWrite) {

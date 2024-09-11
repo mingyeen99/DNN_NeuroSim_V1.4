@@ -60,9 +60,9 @@ void DeMux::Initialize(int _numInput, int numRow){
 
 	// TG
 	resTg = cell.resistanceOn / numRow * IR_DROP_TOLERANCE;
-	widthTgN = CalculateOnResistance(tech.featureSize, NMOS, 300, tech, 0)
+	widthTgN = CalculateOnResistance(tech.featureSize, NMOS, 300, tech)
 							* tech.featureSize / (resTg*2);
-	widthTgP = CalculateOnResistance(tech.featureSize, PMOS, 300, tech, 0)
+	widthTgP = CalculateOnResistance(tech.featureSize, PMOS, 300, tech)
 							* tech.featureSize / (resTg*2);
 
 	initialized = true;

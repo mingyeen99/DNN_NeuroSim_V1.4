@@ -150,7 +150,7 @@ void ShiftAdd::CalculateArea(double _newHeight, double _newWidth, AreaModify _op
 	}
 }
 
-void ShiftAdd::CalculateLatency(double numRead, int M3D) {
+void ShiftAdd::CalculateLatency(double numRead) {
 	if (!initialized) {
 		cout << "[ShiftAdd] Error: Require initialization first!" << endl;
 	} else {
@@ -160,11 +160,11 @@ void ShiftAdd::CalculateLatency(double numRead, int M3D) {
 		if (spikingMode == NONSPIKING) {   // NONSPIKING: binary format
 			// We can shift and add the weighted sum data in the next vector pulse integration cycle
 			// Thus the shift-and-add time can be partially hidden by the vector pulse integration time at the next cycle
-			// But there is at least one time of shift-and-add, which is at the last vector pulse cycle			
+			// But there is at least one time of shift-and-add, which is at the last vector pulse cycle
 			if (param->synchronous) {
 				readLatency = numRead; 	// #cycles
 			} else {
-				adder.CalculateLatency(1e20, dff.capTgDrain, 1, M3D);									
+				adder.CalculateLatency(1e20, dff.capTgDrain, 1);
 				dff.CalculateLatency(1e20, 1);
 				double shiftAddLatency = adder.readLatency + dff.readLatency;
 				if (shiftAddLatency > cell.readPulseWidth)    // Completely hidden in the vector pulse cycle if smaller
