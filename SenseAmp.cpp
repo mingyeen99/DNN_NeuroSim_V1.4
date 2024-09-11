@@ -81,10 +81,13 @@ void SenseAmp::CalculateArea(double _newHeight, double _newWidth, AreaModify _op
 		height = 0;
 		width = 0;
 		// Exchange width and height as in the original code
-		CalculateGateArea(INV, 1, 0, W_SENSE_P * tech.featureSize, pitchSenseAmp, tech, &wSenseP, &hSenseP);
-		CalculateGateArea(INV, 1, 0, W_SENSE_ISO * tech.featureSize, pitchSenseAmp, tech, &wSenseIso, &hSenseIso);
-		CalculateGateArea(INV, 1, W_SENSE_N * tech.featureSize, 0, pitchSenseAmp, tech, &wSenseN, &hSenseN);
-		CalculateGateArea(INV, 1, W_SENSE_EN * tech.featureSize, 0, pitchSenseAmp, tech, &wSenseEn, &hSenseEn);
+
+		// 1.4 update: for < 14nm compatibility
+		CalculateGateArea(INV, 1, 0, ((tech.featureSize <= 14*1e-9)? 2:1)* W_SENSE_P * tech.featureSize, pitchSenseAmp, tech, &wSenseP, &hSenseP);
+		CalculateGateArea(INV, 1, 0, ((tech.featureSize <= 14*1e-9)? 2:1)* W_SENSE_ISO * tech.featureSize, pitchSenseAmp, tech, &wSenseIso, &hSenseIso);
+		CalculateGateArea(INV, 1, ((tech.featureSize <= 14*1e-9)? 2:1)* W_SENSE_N * tech.featureSize, 0, pitchSenseAmp, tech, &wSenseN, &hSenseN);
+		CalculateGateArea(INV, 1, ((tech.featureSize <= 14*1e-9)? 2:1)* W_SENSE_EN * tech.featureSize, 0, pitchSenseAmp, tech, &wSenseEn, &hSenseEn);
+		
 		// Just sum up the area of all components
 		area += (wSenseP * hSenseP) * 2 + (wSenseN * hSenseN) * 2 + wSenseIso * hSenseIso + wSenseEn * hSenseEn;
 		area *= numCol;
@@ -112,11 +115,12 @@ void SenseAmp::CalculateArea(double _newHeight, double _newWidth, AreaModify _op
 		}
 
 		// Capacitance
-		capLoad = CalculateGateCap((W_SENSE_P + W_SENSE_N) * tech.featureSize, tech)
-				+ CalculateDrainCap(W_SENSE_N * tech.featureSize, NMOS, pitchSenseAmp, tech)
-				+ CalculateDrainCap(W_SENSE_P * tech.featureSize, PMOS, pitchSenseAmp, tech)
-				+ CalculateDrainCap(W_SENSE_ISO * tech.featureSize, PMOS, pitchSenseAmp, tech)
-				+ CalculateDrainCap(W_SENSE_MUX * tech.featureSize, NMOS, pitchSenseAmp, tech);
+		// 1.4 update: for < 14nm compatibility
+		capLoad = CalculateGateCap(((tech.featureSize <= 14*1e-9)? 2:1)*(W_SENSE_P + W_SENSE_N) * tech.featureSize, tech)
+				+ CalculateDrainCap(((tech.featureSize <= 14*1e-9)? 2:1)*W_SENSE_N * tech.featureSize, NMOS, pitchSenseAmp, tech)
+				+ CalculateDrainCap(((tech.featureSize <= 14*1e-9)? 2:1)*W_SENSE_P * tech.featureSize, PMOS, pitchSenseAmp, tech)
+				+ CalculateDrainCap(((tech.featureSize <= 14*1e-9)? 2:1)*W_SENSE_ISO * tech.featureSize, PMOS, pitchSenseAmp, tech)
+				+ CalculateDrainCap(((tech.featureSize <= 14*1e-9)? 2:1)*W_SENSE_MUX * tech.featureSize, NMOS, pitchSenseAmp, tech);
 	}
 }
 
@@ -127,8 +131,10 @@ void SenseAmp::CalculateLatency(double numRead) {
 		readLatency = 0;
 
 		/* Voltage sense amplifier */
-		double gm = CalculateTransconductance(W_SENSE_N * tech.featureSize, NMOS, tech)
-				+ CalculateTransconductance(W_SENSE_P * tech.featureSize, PMOS, tech);
+
+		// 1.4 update: for < 14nm compatibility
+		double gm = CalculateTransconductance(((tech.featureSize <= 14*1e-9)? 2:1)*W_SENSE_N * tech.featureSize, NMOS, tech)
+				+ CalculateTransconductance(((tech.featureSize <= 14*1e-9)? 2:1)*W_SENSE_P * tech.featureSize, PMOS, tech);
 		double tau = capLoad / gm;
 		readLatency += tau * log(tech.vdd / senseVoltage);
 		// readLatency += 1/clkFreq;   // Clock time for S/A enable
@@ -146,7 +152,10 @@ void SenseAmp::CalculatePower(double numRead) {
 
 		/* Voltage sense amplifier */
 		// Leakage
-		double idleCurrent =  CalculateGateLeakage(INV, 1, W_SENSE_EN * tech.featureSize, 0, inputParameter.temperature, tech) * tech.vdd;
+
+		// 1.4 update: for < 14nm compatibility
+		// 230920 update
+		double idleCurrent =  CalculateGateLeakage(INV, 1, ((tech.featureSize <= 14*1e-9)? 2:1)* W_SENSE_EN * tech.featureSize, 0, inputParameter.temperature, tech);
 		leakage += idleCurrent * tech.vdd * numCol;
 		
 		// Dynamic energy

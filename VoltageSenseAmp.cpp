@@ -74,7 +74,7 @@ void VoltageSenseAmp::CalculateUnitArea() {
 		areaUnit = (hNmos * wNmos) * 6 + (hPmos * wPmos) * 5;
 		
 		// Resistance
-		resPrecharge = CalculateOnResistance(widthPmos, PMOS, inputParameter.temperature, tech, 0);
+		resPrecharge = CalculateOnResistance(widthPmos, PMOS, inputParameter.temperature, tech);
 		// Capacitance
 		CalculateGateCapacitance(INV, 1, widthNmos, 0, hNmos, tech, &capNmosGate, &capNmosDrain);
 		CalculateGateCapacitance(INV, 1, widthPmos, 0, hPmos, tech, &capPmosGate, &capPmosDrain);
@@ -105,7 +105,8 @@ void VoltageSenseAmp::CalculateLatency(double capInputLoad, double numRead) {
 	} else {
 		readLatency = 0;
 		readLatency += 2.3 * resPrecharge * capS1 + voltageSenseDiff * (capS1 + capNmosDrain + capInputLoad) / (cell.readVoltage/cell.resMemCellOn - cell.readVoltage/cell.resMemCellOff);
-		readLatency += 1/clkFreq * 2;	// Clock time for precharge and S/A enable
+		// Anni update: 
+		// readLatency += 1/clkFreq * 2;	// Clock time for precharge and S/A enable
 		
 		readLatency *= numRead;
 	}

@@ -56,11 +56,11 @@ void ShiftAdd::Initialize(int _numUnit, int _numAdderBit, double _clkFreq, Spiki
 		cout << "[ShiftAdd] Warning: Already initialized!" << endl;
 	
 	numUnit = _numUnit;
-	numAdderBit = _numAdderBit;
+	numAdderBit = _numAdderBit;		
 	numAdder = numUnit;
 	clkFreq = _clkFreq;
 	spikingMode = _spikingMode;
-	numReadPulse = _numReadPulse;
+	numReadPulse = _numReadPulse;	
 	
 	if (spikingMode == NONSPIKING) {	// NONSPIKING: binary format
 		numDff = (numAdderBit+1 + numReadPulse-1) * numUnit;	// numAdderBit+1 because the adder output is 1 bit more than the input, and numReadPulse-1 is for shift-and-add extension (shift register)
@@ -91,10 +91,18 @@ void ShiftAdd::CalculateArea(double _newHeight, double _newWidth, AreaModify _op
 		cout << "[ShiftAdd] Error: Require initialization first!" << endl;
 	} else {
 		double hInv, wInv, hNand, wNand;
-		// INV
-		CalculateGateArea(INV, 1, widthInvN, widthInvP, tech.featureSize * MAX_TRANSISTOR_HEIGHT, tech, &hInv, &wInv);
-		// NAND2
-		CalculateGateArea(NAND, 2, widthNandN, widthNandP, tech.featureSize * MAX_TRANSISTOR_HEIGHT, tech, &hNand, &wNand);
+
+		// 1.4 update: GAA special layout
+		if ((tech.featureSize <= 2e-9) && param->speciallayout) {		// INV
+			CalculateGateArea(INV, 1, widthInvN, widthInvP, tech.featureSize * MAX_TRANSISTOR_HEIGHT, tech, &hInv, &wInv);
+			// NAND2
+			CalculateGateArea(NAND, 2, widthNandN/2.0, widthNandP, tech.featureSize * MAX_TRANSISTOR_HEIGHT, tech, &hNand, &wNand);
+		}
+		else {		// INV
+			CalculateGateArea(INV, 1, widthInvN, widthInvP, tech.featureSize * MAX_TRANSISTOR_HEIGHT, tech, &hInv, &wInv);
+			// NAND2
+			CalculateGateArea(NAND, 2, widthNandN, widthNandP, tech.featureSize * MAX_TRANSISTOR_HEIGHT, tech, &hNand, &wNand);
+		}
 		area = 0;
 		height = 0;
 		width = 0;
@@ -108,10 +116,48 @@ void ShiftAdd::CalculateArea(double _newHeight, double _newWidth, AreaModify _op
 			}
 			// Assume the INV and NAND2 are on the same row and the total width of them is smaller than the adder or DFF
 			if (spikingMode == NONSPIKING) {	// NONSPIKING: binary format
-				height = adder.height + tech.featureSize*MAX_TRANSISTOR_HEIGHT /* INV and NAND2 */ + dff.height;
+				double NEW_CELL_HEIGHT = MAX_TRANSISTOR_HEIGHT;
+
+				if (tech.featureSize == 14 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_14nm/MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 10 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_10nm /MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 7 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_7nm /MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 5 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_5nm /MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 3 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_3nm /MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 2 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_2nm /MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 1 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_1nm /MAX_TRANSISTOR_HEIGHT);
+				else
+				NEW_CELL_HEIGHT *= 1;	
+
+				height = adder.height + tech.featureSize*NEW_CELL_HEIGHT /* INV and NAND2 */ + dff.height;
 				width = _newWidth;
 			} else {	// SPIKING: count spikes
-				height = tech.featureSize*MAX_TRANSISTOR_HEIGHT /* INV and NAND2 */ + dff.height;
+				double NEW_CELL_HEIGHT = MAX_TRANSISTOR_HEIGHT;
+
+				if (tech.featureSize == 14 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_14nm/MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 10 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_10nm /MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 7 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_7nm /MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 5 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_5nm /MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 3 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_3nm /MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 2 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_2nm /MAX_TRANSISTOR_HEIGHT);
+				else if (tech.featureSize == 1 * 1e-9)
+				NEW_CELL_HEIGHT *= (MAX_TRANSISTOR_HEIGHT_1nm /MAX_TRANSISTOR_HEIGHT);
+				else
+				NEW_CELL_HEIGHT *= 1;	
+				
+				height = tech.featureSize*NEW_CELL_HEIGHT /* INV and NAND2 */ + dff.height;
 				width = _newWidth;
 			}
 			area = height * width;
@@ -150,7 +196,7 @@ void ShiftAdd::CalculateArea(double _newHeight, double _newWidth, AreaModify _op
 	}
 }
 
-void ShiftAdd::CalculateLatency(double numRead, int M3D) {
+void ShiftAdd::CalculateLatency(double numRead) {
 	if (!initialized) {
 		cout << "[ShiftAdd] Error: Require initialization first!" << endl;
 	} else {
@@ -160,29 +206,32 @@ void ShiftAdd::CalculateLatency(double numRead, int M3D) {
 		if (spikingMode == NONSPIKING) {   // NONSPIKING: binary format
 			// We can shift and add the weighted sum data in the next vector pulse integration cycle
 			// Thus the shift-and-add time can be partially hidden by the vector pulse integration time at the next cycle
-			// But there is at least one time of shift-and-add, which is at the last vector pulse cycle			
+			// But there is at least one time of shift-and-add, which is at the last vector pulse cycle		
+
+			// Anni update	
+			adder.CalculateLatency(1e20, dff.capTgDrain, 1);
+			dff.CalculateLatency(1e20, 1);
+			double shiftAddLatency = adder.readLatency + dff.readLatency;
+			if (shiftAddLatency > cell.readPulseWidth)    // Completely hidden in the vector pulse cycle if smaller
+				readLatency += (shiftAddLatency - cell.readPulseWidth) * (numRead - 1);
+			readLatency += shiftAddLatency;    // At least need one time of shift-and-add
 			if (param->synchronous) {
 				readLatency = numRead; 	// #cycles
-			} else {
-				adder.CalculateLatency(1e20, dff.capTgDrain, 1, M3D);									
-				dff.CalculateLatency(1e20, 1);
-				double shiftAddLatency = adder.readLatency + dff.readLatency;
-				if (shiftAddLatency > cell.readPulseWidth)    // Completely hidden in the vector pulse cycle if smaller
-					readLatency += (shiftAddLatency - cell.readPulseWidth) * (numRead - 1);
-				readLatency += shiftAddLatency;    // At least need one time of shift-and-add
 			}
+
 		} else {	// SPIKING: count spikes
 			// We can shift out the weighted sum data in the next vector pulse integration cycle
 			// Thus the shiftout time can be partially hidden by the vector pulse integration time at the next cycle
 			// But there is at least one time of shiftout, which is at the last vector pulse cycle
+
+			// Anni update
+			dff.CalculateLatency(1e20, numBitPerDff);	// Need numBitPerDff cycles to shift out the weighted sum data
+			double shiftLatency = dff.readLatency;
+			if (shiftLatency > cell.readPulseWidth)	// Completely hidden in the vector pulse cycle if smaller
+				readLatency += (shiftLatency - cell.readPulseWidth) * (numRead - 1);
+			readLatency += shiftLatency;	// At least need one time of shiftout
 			if (param->synchronous) {
 				readLatency = numBitPerDff * numRead;	// #cycles
-			} else {
-				dff.CalculateLatency(1e20, numBitPerDff);	// Need numBitPerDff cycles to shift out the weighted sum data
-				double shiftLatency = dff.readLatency;
-				if (shiftLatency > cell.readPulseWidth)	// Completely hidden in the vector pulse cycle if smaller
-					readLatency += (shiftLatency - cell.readPulseWidth) * (numRead - 1);
-				readLatency += shiftLatency;	// At least need one time of shiftout
 			}
 		}
 	}

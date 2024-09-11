@@ -58,7 +58,7 @@ public:
 	void SaveOutput(const char* str);
 	void Initialize(int _numBit, int _numAdder, double _clkFreq);
 	void CalculateArea(double _newHeight, double _newWidth, AreaModify _option);
-	void CalculateLatency(double _rampInput, double _capLoad, double numRead, int M3D);
+	void CalculateLatency(double _rampInput, double _capLoad, double numRead);
 	void CalculatePower(double numRead, int numAdderPerOperation);
 
 	/* Properties */

@@ -42,6 +42,12 @@
 #include "formula.h"
 #include "SwitchMatrix.h"
 
+// 1.4 update : include Param.h
+#include "Param.h" 
+
+// 1.4 update : include Param.h
+extern Param *param;
+
 using namespace std;
 
 SwitchMatrix::SwitchMatrix(const InputParameter& _inputParameter, const Technology& _tech, const MemCell& _cell): inputParameter(_inputParameter), tech(_tech), cell(_cell), dff(_inputParameter, _tech, _cell), FunctionUnit() {
@@ -67,18 +73,37 @@ void SwitchMatrix::Initialize(int _mode, int _numOutput, double _resTg, bool _ne
 	dff.Initialize(numOutput, clkFreq);       // used for scan-in ...
 	
 	// TG  resTg = cell.resMemCellOn / numLoad * IR_DROP_TOLERANCE;
-	resTg = _resTg * IR_DROP_TOLERANCE;      // given actual TG resistance
+	resTg = _resTg * param->switchmatrixsizeratio;      // given actual TG resistance
 	
 	// Why use pre-defined resTg? Becasue we want to define TG resistance according to loading and performance ...
 	
-	widthTgN = CalculateOnResistance(tech.featureSize, NMOS, 300, tech, 0) * tech.featureSize * LINEAR_REGION_RATIO/ (resTg*2);
+	// 1.4 update: for < 14 nm compatibility, changed to on-resistance formula
+	widthTgN = CalculateOnResistance_normal(((tech.featureSize <= 14*1e-9)? 2:1) * tech.featureSize, NMOS, inputParameter.temperature, tech) * tech.featureSize * LINEAR_REGION_RATIO/ (resTg*2);
 	// R~(1/W), calculate actual TG width based on feature-sized TG resistance and given actual TG resistance 
 	
-	widthTgP = CalculateOnResistance(tech.featureSize, PMOS, 300, tech, 0) * tech.featureSize * LINEAR_REGION_RATIO/ (resTg*2);
+	// 1.4 update: for < 14 nm compatibility, changed to on-resistance formula 
+	widthTgP = CalculateOnResistance_normal(((tech.featureSize <= 14*1e-9)? 2:1) * tech.featureSize, PMOS, inputParameter.temperature, tech) * tech.featureSize * LINEAR_REGION_RATIO/ (resTg*2);
 	// assuming resTgN = resTgP, so resTgN = resTgP = 2*resTg (connected in parallel)
 	
-	EnlargeSize(&widthTgN, &widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech);
+	// 1.4 update: no Enlarge Size
+	// EnlargeSize(&widthTgN, &widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech);
 	
+
+	// 1.4 update: recalculate width for FinFET case
+
+	if (tech.featureSize <= 14*1e-9){
+		widthTgN = 2* ceil(widthTgN/tech.featureSize) * tech.featureSize;
+		widthTgP = 2* ceil(widthTgP/tech.featureSize) * tech.featureSize;
+	} else {
+		if (widthTgN < tech.featureSize)
+			widthTgN = tech.featureSize;
+		if (widthTgP < tech.featureSize)
+			widthTgP = tech.featureSize;
+	}
+	resTg = 1 / (1/CalculateOnResistance_normal(widthTgN, NMOS, inputParameter.temperature, tech)
+			+ 1/CalculateOnResistance_normal(widthTgP, PMOS, inputParameter.temperature, tech));
+	
+
 	initialized = true;
 }
 
@@ -92,6 +117,25 @@ void SwitchMatrix::CalculateArea(double _newHeight, double _newWidth, AreaModify
 		width = 0;
 		if (mode == ROW_MODE) {	// Connect to rows
 			double minCellHeight = MAX_TRANSISTOR_HEIGHT * tech.featureSize;
+
+			// 1.4 update : new cell dimension 
+
+			if (tech.featureSize == 14 * 1e-9)
+			minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_14nm /MAX_TRANSISTOR_HEIGHT);
+			else if (tech.featureSize == 10 * 1e-9)
+			minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_10nm /MAX_TRANSISTOR_HEIGHT);
+			else if (tech.featureSize == 7 * 1e-9)
+			minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_7nm /MAX_TRANSISTOR_HEIGHT);
+			else if (tech.featureSize == 5 * 1e-9)
+			minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_5nm /MAX_TRANSISTOR_HEIGHT);
+			else if (tech.featureSize == 3 * 1e-9)
+			minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_3nm /MAX_TRANSISTOR_HEIGHT);
+			else if (tech.featureSize == 2 * 1e-9)
+			minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_2nm /MAX_TRANSISTOR_HEIGHT);
+			else if (tech.featureSize == 1 * 1e-9)
+			minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_1nm /MAX_TRANSISTOR_HEIGHT);
+			else
+			minCellHeight *= 1;
 
 			if (_newHeight && _option==NONE) {
 				if (_newHeight < minCellHeight) {
@@ -119,6 +163,26 @@ void SwitchMatrix::CalculateArea(double _newHeight, double _newWidth, AreaModify
 			if (_newWidth && _option==NONE) {
 				numRowTgPair = 1;
 				double minCellWidth = 2 * (POLY_WIDTH + MIN_GAP_BET_GATE_POLY) * tech.featureSize; // min standard cell width for 1 Tg
+
+				// 1.4 update : new cell dimension 
+
+				if (tech.featureSize == 14 * 1e-9)
+				minCellWidth  *= ( (double)CPP_14nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
+				else if (tech.featureSize == 10 * 1e-9)
+				minCellWidth  *= ( (double)CPP_10nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
+				else if (tech.featureSize == 7 * 1e-9)
+				minCellWidth  *= ( (double)CPP_7nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
+				else if (tech.featureSize == 5 * 1e-9)
+				minCellWidth  *= ( (double)CPP_5nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
+				else if (tech.featureSize == 3 * 1e-9)
+				minCellWidth  *= ( (double)CPP_3nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
+				else if (tech.featureSize == 2 * 1e-9)
+				minCellWidth  *= ( (double)CPP_2nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
+				else if (tech.featureSize == 1 * 1e-9)
+				minCellWidth  *= ( (double)CPP_1nm/(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
+				else
+				minCellWidth  *= 1;
+				
 				if (minCellWidth > _newWidth) {
 					cout << "[SwitchMatrix] Error: pass gate width is even larger than the array width" << endl;
 				}
@@ -185,10 +249,27 @@ void SwitchMatrix::CalculateLatency(double _rampInput, double _capLoad, double _
 		dff.CalculateLatency(1e20, numRead);
 
 		// TG
-		capOutput = capTgDrain * 3;
-		tr = resTg * (capOutput + capLoad) + resLoad * capLoad / 2;
-		readLatency += horowitz(tr, 0, rampInput, &rampOutput);	// get from chargeLatency in the original SubArray.cpp
+		// 1.4 update: TG outputcap modified capTgDrain * 3; -> capTgDrain * 2;
+		// needs check, due to the GS/GD parasitic cap
+
+		capOutput = capTgDrain * 2 + capTgGateN*0.5 + capTgGateP*0.5 ;
+
+		// 1.4 update: resTg, buffer latency model for switch matrix (propagation delay for distributed RC)
+		// eq resistance (rn//rp) stays the same regardless of the biasing in transmission gate. So we take ron,n // ron,p which is the resistance at the onset
 		
+		double sectionnum = param->numColSubArray/(param->buffernumber+1);
+
+		if (param->buffernumber ==0){
+			tr =  resTg * (capOutput) * 0.69 
+			+ param->unitcap * sectionnum * (0.69*resTg + 0.38*param->unitres*sectionnum);						
+		} else {
+			tr =  resTg * (capOutput) * 0.69 
+			+ param->unitcap *  sectionnum * (0.69*resTg + 0.38*param->unitres*sectionnum)
+			+ (param->unitcap * sectionnum * 0.69 + 0.69 * resTg) * param-> drivecapin;		
+		}
+
+		readLatency += tr;
+		// readLatency += horowitz(tr, 0, rampInput, &rampOutput);	// we do not use horitz model here 
 		readLatency *= numRead;
 		// readLatency += dff.readLatency;
 

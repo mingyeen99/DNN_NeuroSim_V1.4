@@ -83,8 +83,9 @@ void CurrentSenseAmp::CalculateUnitArea() {
 	} else {
 		double hNmos, wNmos, hPmos, wPmos;
 		
-		CalculateGateArea(INV, 1, widthNmos, 0, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &hNmosS, &wNmosS);
-		CalculateGateArea(INV, 1, 0, widthPmos, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &hPmos, &wPmos);
+
+		CalculateGateArea(INV, 1, widthNmos, 0, tech.featureSize*MAX_TRANSISTOR_HEIGHT , tech, &hNmos, &wNmos);
+		CalculateGateArea(INV, 1, 0, widthPmos, tech.featureSize*MAX_TRANSISTOR_HEIGHT , tech, &hPmos, &wPmos);
 		
 		areaUnit = (hNmos*wNmos)*48 + (hPmos*wPmos)*40;
 	}
@@ -316,9 +317,21 @@ double CurrentSenseAmp::GetColumnPower(double columnRes) {
 			} else if (param->technode == 10){   
 				Column_Power = 0.55*1e-6;
 				Column_Power += 0.051580*exp(-2.303*log10(columnRes));
-			} else {   // 7nm
+			} else if (param->technode == 7){   // 7nm
 				Column_Power = 0.35*1e-6;
-				Column_Power += 0.043555*exp(-2.303*log10(columnRes));
+				Column_Power += 0.0235*exp(-2.303*log10(columnRes));
+			} else if (param->technode == 5){   // 5nm
+				Column_Power = 0.25914*1e-6;
+				Column_Power += 0.018602*exp(-2.303*log10(columnRes));
+			} else if (param->technode == 3){   // 3nm
+				Column_Power = 0.192217*1e-6;
+				Column_Power += 0.01491*exp(-2.303*log10(columnRes));
+			} else if (param->technode == 2){   // 2nm
+				Column_Power = 0.16546*1e-6;
+				Column_Power += 0.013349*exp(-2.303*log10(columnRes));
+			} else {   // 1nm
+				Column_Power = 0.142427*1e-6;
+				Column_Power += 0.01195*exp(-2.303*log10(columnRes));
 			}
 		}
 	}

@@ -36,8 +36,8 @@
 *   Xiaochen Peng   Email: xpeng15 at asu dot edu
 ********************************************************************************/
 
-#ifndef COMPARATOR_H_
-#define COMPARATOR_H_
+#ifndef XYBUS_H_
+#define XYBUS_H_
 
 #include "typedef.h"
 #include "InputParameter.h"
@@ -45,32 +45,39 @@
 #include "MemCell.h"
 #include "FunctionUnit.h"
 
-class Comparator: public FunctionUnit {
+class XYBus: public FunctionUnit {
 public:
-	Comparator(const InputParameter& _inputParameter, const Technology& _tech, const MemCell& _cell);
-	virtual ~Comparator() {}
+	XYBus(const InputParameter& _inputParameter, const Technology& _tech, const MemCell& _cell);
+	virtual ~XYBus() {}
 	const InputParameter& inputParameter;
 	const Technology& tech;
 	const MemCell& cell;
 
 	/* Functions */
 	void PrintProperty(const char* str);
-	void SaveOutput(const char* str);
-	void Initialize(int _numBit, int _numComparator);
-	void CalculateUnitArea(AreaModify _option);
-	void CalculateArea(double widthArray);
-	void CalculateLatency(double _rampInput, double _capLoad, double numRead);
-	void CalculatePower(double numRead, int numComparatorPerOperation);
+	void Initialize(int _numRow, int _numCol, double _delaytolerance, double _busWidth, double _clkFreq);
+	void CalculateArea(double unitHeight, double unitWidth, double foldedratio);
+	void CalculateLatency(int x_end, int y_init, double unitHeight, double unitWidth, double numReadInput, double numReadOutput);
+	void CalculatePower(int x_end, int y_init, double unitHeight, double unitWidth, double numBitInput, double numBitOutput);
+	double GetUnitLengthRes(double wireLength);
 
 	/* Properties */
 	bool initialized;	/* Initialization flag */
-	double capLoad;
-	double capInvInput, capInvOutput, capNand2Input, capNand2Output, capNand3Input, capNand3Output;
-	int numBit;
-	int numComparator;
-	double widthInvN, widthInvP, widthNand2N, widthNand2P, widthNand3N, widthNand3P;
-	double rampInput, rampOutput;
-    double areaUnit;
+	double widthInvN, widthInvP, wInv, hInv, capInvInput, capInvOutput;
+	double widthMinInvN, widthMinInvP, wMinInv, hMinInv, capMinInvInput, capMinInvOutput, wRep, hRep, capRepInput, capRepOutput;
+	double numStage, numTree, AR, Rho, unitLengthWireResistance, minDist, minDelay, resOnRep;
+	int numRow, numCol, numRepeater, numTotalRepeater, repeaterSize;
+	double unitHeight, unitWidth;
+	double numRep_vertical, numRep_horizontal;
+	double busWidth, delaytolerance, unitLengthWireCap, totalWireLength;
+	double unitLatencyRep, unitLatencyWire, unitLengthLeakage, unitLengthEnergyRep, unitLengthEnergyWire;
+    double wireWidthH, unitLengthWireResistanceH, wireWidthV, unitLengthWireResistanceV;
+	double clkFreq;
+
+	// 230920 update
+	double critical_latency;
+
+
 };
 
-#endif /* COMPARATOR_H_ */
+#endif /* HTREE_H_ */

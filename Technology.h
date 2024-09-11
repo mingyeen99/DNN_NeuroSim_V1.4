@@ -74,14 +74,25 @@ public:
 	double effectiveResistanceMultiplier;	/* Extra resistance due to vdsat */
 	double currentOnNmos[101];		/* NMOS saturation current, Unit: A/m */
 	double currentOnPmos[101];		/* PMOS saturation current, Unit: A/m */
-	double currentOnNmosTop[101];		/* NMOS saturation current, Unit: A/m (top tier) */ 
-	double currentOnPmosTop[101];		/* PMOS saturation current, Unit: A/m (top tier) */
 	double currentOffNmos[101];	/* NMOS off current (from 300K to 400K), Unit: A/m */
 	double currentOffPmos[101]; /* PMOS off current (from 300K to 400K), Unit: A/m */
     double current_gmNmos;		/* NMOS current at 0.7*vdd for gm calculation, Unit: A/m/V*/ 
     double current_gmPmos;		/* PMOS current at 0.7*vdd for gm calculation, Unit: A/m/V*/ 
   
 	double capPolywire;	/* Poly wire capacitance, Unit: F/m */
+
+	// 1.4 update : additional parameters related to added nodes
+
+	double max_sheet_num=0;
+	double thickness_sheet=0;
+	double width_sheet=0;
+	double effective_width=0;
+	double max_fin_num=0;
+	double max_fin_per_GAA=0;
+	double gm_oncurrent = 0;  // gm at on current
+	double cap_draintotal = 0;
+	
+
 };
 
 #endif /* TECHNOLOGY_H_ */

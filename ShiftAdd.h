@@ -60,7 +60,7 @@ public:
 	void SaveOutput(const char* str);
 	void Initialize(int _numUnit, int _numAdderBit, double _clkFreq, SpikingMode _spikingMode, int _numReadPulse);
 	void CalculateArea(double _newHeight, double _newWidth, AreaModify _option);
-	void CalculateLatency(double numRead, int M3D);
+	void CalculateLatency(double numRead);
 	void CalculatePower(double numRead);
 	void CalculateUnitArea();
 

@@ -40,9 +40,12 @@
 #include <iostream>
 #include "constant.h"
 #include "formula.h"
+#include "Param.h"
 #include "AdderTree.h"
 
 using namespace std;
+// Anni update
+extern Param *param;
 
 AdderTree::AdderTree(const InputParameter& _inputParameter, const Technology& _tech, const MemCell& _cell): inputParameter(_inputParameter), tech(_tech), cell(_cell), adder(_inputParameter, _tech, _cell), FunctionUnit() {
 	initialized = false;
@@ -117,7 +120,7 @@ void AdderTree::CalculateArea(double _newHeight, double _newWidth, AreaModify _o
 	}
 }
 
-void AdderTree::CalculateLatency(double numRead, int numUnitAdd, double _capLoad, int M3D) {
+void AdderTree::CalculateLatency(double numRead, int numUnitAdd, double _capLoad) {
 	if (!initialized) {
 		cout << "[AdderTree] Error: Require initialization first!" << endl;
 	} else {
@@ -137,17 +140,35 @@ void AdderTree::CalculateLatency(double numRead, int numUnitAdd, double _capLoad
 			j = numUnitAdd;
 		}
 
-		while (i != 0) {   // calculate the total # of full adder in each Adder Tree
-			numAdderEachStage = ceil(j/2);
-			adder.Initialize(numBitEachStage, numAdderEachStage, clkFreq);   
-			adder.CalculateLatency(1e20, _capLoad, 1, M3D);
-			readLatency += adder.readLatency;
-			numBitEachStage += 1;
-			j = ceil(j/2);
-			i -= 1;
-			
-			adder.initialized = false;
+		// 1.4 update: adder tree delay updated
+		numAdderEachStage = ceil(j/2);
+		adder.Initialize(numBitEachStage, numAdderEachStage, clkFreq); 
+		adder.CalculateLatency(1e20, _capLoad, 1);
+		readLatency += adder.readLatency;
+		numBitEachStage += 1;
+		j = ceil(j/2);
+		i -= 1;
+		adder.initialized = false;
+
+		if (i>0) {
+			while (i != 0) {   // calculate the total # of full adder in each Adder Tree
+				numAdderEachStage = ceil(j/2);
+				adder.Initialize(2, numAdderEachStage, clkFreq);   
+				adder.CalculateLatency(1e20, _capLoad, 1);
+				readLatency += adder.readLatency;
+				numBitEachStage += 1;
+				j = ceil(j/2);
+				i -= 1;
+				
+				adder.initialized = false;
+			}
 		}
+
+		//Anni update
+		if (param->synchronous) {
+			readLatency  = ceil(readLatency*clkFreq);	//#cycles
+		}
+
         readLatency *= numRead;		
 	}
 }

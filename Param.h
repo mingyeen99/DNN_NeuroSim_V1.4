@@ -1,4 +1,4 @@
-/*******************************************************************************
+/******************out*************************************************************
 * Copyright (c) 2015-2017
 * School of Electrical, Computer and Energy Engineering, Arizona State University
 * PI: Prof. Shimeng Yu
@@ -50,8 +50,8 @@ public:
 	double heightInFeatureSize1T1R, widthInFeatureSize1T1R, heightInFeatureSizeCrossbar, widthInFeatureSizeCrossbar;
 	
 	int relaxArrayCellHeight, relaxArrayCellWidth;
-	
-	bool globalBufferType, tileBufferType, peBufferType, chipActivation, reLu, novelMapping, pipeline, SARADC, currentMode, validated, synchronous, M3D;
+	// Anni update
+	bool globalBusType, globalBufferType, tileBufferType, peBufferType, chipActivation, reLu, novelMapping, pipeline, SARADC, currentMode, validated, synchronous;
 	int globalBufferCoreSizeRow, globalBufferCoreSizeCol, tileBufferCoreSizeRow, tileBufferCoreSizeCol;																								
 	
 	double clkFreq, featuresize, readNoise, resistanceOn, resistanceOff, maxConductance, minConductance;
@@ -75,6 +75,72 @@ public:
 	double AR, Rho, wireLengthRow, wireLengthCol, unitLengthWireResistance, wireResistanceRow, wireResistanceCol;
 	
 	double alpha, beta, gamma, delta, epsilon, zeta;
+
+	// 1.4 update: BEOL related parameters added
+	
+	double Metal0=0;
+	double Metal1=0;
+	double AR_Metal0=0;
+	double AR_Metal1=0;
+	double Rho_Metal0=0;
+	double Rho_Metal1=0;
+	double Metal0_unitwireresis=0;
+	double Metal1_unitwireresis=0;
+
+	// 1.4 update: add activation implementation option
+
+	bool Activationtype; // true: SRAM, False: RRAM
+
+	// 1.4 update: Final driver sizing for row decoder conventional parallel mode (SRAM, RRAM)
+	// multiplied by the driver width
+	double sizingfactor_MUX= 1; 
+	double sizingfactor_WLdecoder= 1; 
+
+	// 1.4 update: switchmatrix parameter tuning
+	double newswitchmatrixsizeratio=6;
+	double switchmatrixsizeratio=1;
+	
+	// 1.4 update: Special layout
+	double speciallayout;
+	
+	// 1.4 update: added parameters for buffer insertion
+	double unitcap;
+	double unitres;
+	double drivecapin; 
+	double buffernumber=0;
+	double buffersizeratio=0;
+	
+	// 1.4 update: barrier thickness
+	double barrierthickness= 0;
+	
+	// 1.4 update: new ADC modeling related parameters
+	double dumcolshared;
+	double columncap;
+	double reference_energy_peri=0;
+	
+	// 1.4 update: array dimension/SRAM access resistance for multilevelsenseamp
+	double arrayheight;
+	double arraywidthunit;
+	double resCellAccess;
+
+	// 1.4 update 
+	double inputtoggle;
+	double outputtoggle;
+
+	// 1.4 debug
+	double ADClatency;
+	double rowdelay;
+	double muxdelay;
+	
+	// 1.4 update: technology node
+	int technologynode;
+
+	// Anni update: partial parallel mode
+	int numRowParallel;
+
+	// 230920 update
+	double totaltile_num;
+	int sync_data_transfer;
 };
 
 #endif

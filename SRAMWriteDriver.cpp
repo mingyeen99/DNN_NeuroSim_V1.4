@@ -69,6 +69,7 @@ void SRAMWriteDriver::CalculateArea(double _newHeight, double _newWidth, AreaMod
 	} else {
 		double hInv, wInv;
 		// INV
+		// 1.4 update: (added explanation) Assume 3 inverters are used - 2 for driving BL, 1 for driving BL bar
 		CalculateGateArea(INV, 1, widthInvN, widthInvP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &hInv, &wInv);
 		area = 0;
 		height = 0;
@@ -115,7 +116,7 @@ void SRAMWriteDriver::CalculateArea(double _newHeight, double _newWidth, AreaMod
 	}
 }
 
-void SRAMWriteDriver::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numWrite, int M3D){
+void SRAMWriteDriver::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numWrite){
 	if (!initialized) {
 		cout << "[SRAMWriteDriver] Error: Require initialization first!" << endl;
 	} else {
@@ -130,14 +131,14 @@ void SRAMWriteDriver::CalculateLatency(double _rampInput, double _capLoad, doubl
 		double rampInvOutput;
 		
 		// 1st stage INV (Pullup)
-		resPullUp = CalculateOnResistance(widthInvP, PMOS, inputParameter.temperature, tech, M3D);
+		resPullUp = CalculateOnResistance(widthInvP, PMOS, inputParameter.temperature, tech);
 		tr = resPullUp * (capInvOutput + capInvInput);
 		gm = CalculateTransconductance(widthInvP, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
 		writeLatency += horowitz(tr, beta, rampInput, &rampInvOutput);
 		
 		// 2nd stage INV (Pulldown)
-		resPullDown = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech, M3D);
+		resPullDown = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech);
 		tr = resPullDown * (capLoad + capInvOutput) + resLoad * capLoad / 2;
 		gm = CalculateTransconductance(widthInvN, NMOS, tech);
 		beta = 1 / (resPullDown * gm);
@@ -155,7 +156,7 @@ void SRAMWriteDriver::CalculatePower(double numWrite) {
 		leakage = CalculateGateLeakage(INV, 1, widthInvN, widthInvP, inputParameter.temperature, tech) * tech.vdd * 3 * numCol;
 
 		/* Write Dynamic energy */
-		// After the precharger precharges the BL and BL_bar to Vdd, the write driver only discharges one of them to zero, so there is no energy consumption on the BL and BL_bar
+		// Energy consumption due to charging and discharging of BL & BL_bar already accounted for in precharger.cpp
 		// Assuming the write data is 0, the energy consumption is on the output of 1st INV and the input of 2nd INV
 		writeDynamicEnergy = (capInvOutput + capInvInput) * tech.vdd * tech.vdd * MIN(numWriteCellPerOperationNeuro, numCol*activityColWrite);
 		writeDynamicEnergy *= numWrite;
