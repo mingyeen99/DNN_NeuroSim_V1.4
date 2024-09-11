@@ -57,7 +57,7 @@ public:
 	void PrintProperty(const char* str);
 	void Initialize(int _numLevel, int _numEncoder);
 	void CalculateArea(double _newHeight, double _newWidth, AreaModify _option);
-	void CalculateLatency(double _rampInput, double numRead);
+	void CalculateLatency(double _rampInput, double numRead, int M3D);
 	void CalculatePower(double numRead);
 
 	/* Properties */
@@ -70,9 +70,6 @@ public:
 	int numInput;       // number of NAND gate in encoder
 	int numGate;        // number of NAND gate in encoder 
 
-	// 1.4 update
-	double capInvInput_Encoder, capInvOutput_Encoder;
-	
 };
 
 #endif /* MultilevelSAEncoder_H_ */

@@ -83,8 +83,6 @@ void LevelShifter::CalculateArea(double _newHeight, double _newWidth, AreaModify
 		width = 0;
 		
 		double hlow, hlatch, hhigh, wlow, wlatch, whigh;
-
-		// 1.4 update: needs check - compatibility with FinFET?
 		if (param->validated){			
 			CalculateGateArea(INV, 1, widthN*15*2, widthP*20*2, tech.featureSize*MAX_TRANSISTOR_HEIGHT*2.5, tech, &hlow, &wlow); 	//width*2, height*2.5
 			CalculateGateArea(INV, 1, widthN*32*2, widthP*10*2, tech.featureSize*MAX_TRANSISTOR_HEIGHT*2.5, tech, &hlatch, &wlatch);
@@ -136,7 +134,7 @@ void LevelShifter::CalculateArea(double _newHeight, double _newWidth, AreaModify
 }
 
 
-void LevelShifter::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numRead, double numWrite) {	// For simplicity, assume shift register is ideal
+void LevelShifter::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numRead, double numWrite, int M3D) {	// For simplicity, assume shift register is ideal
 	if (!initialized) {
 		cout << "[LevelShifter] Error: Require initialization first!" << endl;
 	} else {
@@ -149,7 +147,7 @@ void LevelShifter::CalculateLatency(double _rampInput, double _capLoad, double _
 		writeLatency = 0;
 		
 		// 1st low voltage triggered pull up
-		resPullUp = CalculateOnResistance(widthP*20, PMOS, inputParameter.temperature, tech);
+		resPullUp = CalculateOnResistance(widthP*20, PMOS, inputParameter.temperature, tech, M3D);
 		tr = resPullUp * (capLowDrain + capMidGateN * 2);
 		gm = CalculateTransconductance(widthP*20, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
@@ -157,7 +155,7 @@ void LevelShifter::CalculateLatency(double _rampInput, double _capLoad, double _
 		writeLatency += horowitz(tr, beta, 1e20, &ramp[0]);
 		
 		// 2ed high voltage pull up
-		resPullUp = CalculateOnResistance(widthP*82, PMOS, inputParameter.temperature, tech);
+		resPullUp = CalculateOnResistance(widthP*82, PMOS, inputParameter.temperature, tech, M3D);
 		tr = resPullUp * (capLoad + capHighDrain);
 		gm = CalculateTransconductance(widthP*82, PMOS, tech);
 		beta = 1 / (resPullUp * gm);

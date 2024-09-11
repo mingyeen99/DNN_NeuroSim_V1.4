@@ -126,7 +126,7 @@ void Comparator::CalculateArea(double widthArray){
 }
 
 
-void Comparator::CalculateLatency(double _rampInput, double _capLoad, double numRead){
+void Comparator::CalculateLatency(double _rampInput, double _capLoad, double numRead, int M3D){
 	if (!initialized) {
 		cout << "[Comparator] Error: Require initialization first!" << endl;
 	} else {
@@ -143,13 +143,13 @@ void Comparator::CalculateLatency(double _rampInput, double _capLoad, double num
 		// Just use the delay path from Gin to Gout for simplicity
 		// 1st bit comparator
 		// NAND2
-		resPullDown = CalculateOnResistance(widthNand2N, NMOS, inputParameter.temperature, tech) * 2;
+		resPullDown = CalculateOnResistance(widthNand2N, NMOS, inputParameter.temperature, tech, M3D) * 2;
 		tr = resPullDown * (capNand2Output + capNand3Input);
 		gm = CalculateTransconductance(widthNand2N, NMOS, tech);
 		beta = 1 / (resPullDown * gm);
 		readLatency += horowitz(tr, beta, rampInput, &rampNand2Output);
 		// NAND3
-		resPullUp = CalculateOnResistance(widthNand3P, PMOS, inputParameter.temperature, tech);
+		resPullUp = CalculateOnResistance(widthNand3P, PMOS, inputParameter.temperature, tech, M3D);
 		tr = resPullUp * (capNand3Output + capNand2Input);
 		gm = CalculateTransconductance(widthNand3P, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
@@ -157,13 +157,13 @@ void Comparator::CalculateLatency(double _rampInput, double _capLoad, double num
 		
 		// 2nd bit to the second last bit comparator
 		// NAND2
-		resPullDown = CalculateOnResistance(widthNand2N, NMOS, inputParameter.temperature, tech) * 2;
+		resPullDown = CalculateOnResistance(widthNand2N, NMOS, inputParameter.temperature, tech, M3D) * 2;
 		tr = resPullDown * (capNand2Output + capNand3Input);
 		gm = CalculateTransconductance(widthNand2N, NMOS, tech);
 		beta = 1 / (resPullDown * gm);
 		readLatencyIntermediate += horowitz(tr, beta, rampNand3Output, &rampNand2Output);
 		// NAND3
-		resPullUp = CalculateOnResistance(widthNand3P, PMOS, inputParameter.temperature, tech);
+		resPullUp = CalculateOnResistance(widthNand3P, PMOS, inputParameter.temperature, tech, M3D);
 		tr = resPullUp * (capNand3Output + capNand2Input);
 		gm = CalculateTransconductance(widthNand3P, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
@@ -173,13 +173,13 @@ void Comparator::CalculateLatency(double _rampInput, double _capLoad, double num
 
 		// Last bit comparator
 		// NAND2
-		resPullDown = CalculateOnResistance(widthNand2N, NMOS, inputParameter.temperature, tech) * 2;
+		resPullDown = CalculateOnResistance(widthNand2N, NMOS, inputParameter.temperature, tech, M3D) * 2;
 		tr = resPullDown * (capNand2Output + capNand3Input);
 		gm = CalculateTransconductance(widthNand2N, NMOS, tech);
 		beta = 1 / (resPullDown * gm);
 		readLatency += horowitz(tr, beta, rampNand3Output, &rampNand2Output);
 		// NAND3
-		resPullUp = CalculateOnResistance(widthNand3P, PMOS, inputParameter.temperature, tech);
+		resPullUp = CalculateOnResistance(widthNand3P, PMOS, inputParameter.temperature, tech, M3D);
 		tr = resPullUp * (capNand3Output + capLoad);
 		gm = CalculateTransconductance(widthNand3P, PMOS, tech);
 		beta = 1 / (resPullUp * gm);

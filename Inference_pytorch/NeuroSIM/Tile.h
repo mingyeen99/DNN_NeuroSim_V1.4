@@ -54,10 +54,9 @@ using namespace std;
 /*** Functions ***/
 void TileInitialize(InputParameter& inputParameter, Technology& tech, MemCell& cell, double _numPENM, double _peSizeNM, double _numPECM, double _peSizeCM);
 vector<double> TileCalculateArea(double numPE, double peSize, bool NMTile, double *height, double *width);
-// Anni update: add double *leakageSRAMInUse
 void TileCalculatePerformance(const vector<vector<double> > &newMemory, const vector<vector<double> > &oldMemory, const vector<vector<double> > &inputVector, 
-			int novelMap, double numPE, double peSize, 
-			int speedUpRow, int speedUpCol, int weightMatrixRow, int weightMatrixCol, int numInVector, MemCell& cell, double *readLatency, double *readDynamicEnergy, double *leakage, double *leakageSRAMInUse,
+			const vector<int> &partition3D, int novelMap, double numPE, double peSize, 
+			int speedUpRow, int speedUpCol, int weightMatrixRow, int weightMatrixCol, int numInVector, MemCell& cell, double *readLatency, double *readDynamicEnergy, double *leakage,
 			double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy,
 			double *coreLatencyADC, double *coreLatencyAccum, double *coreLatencyOther, double *coreEnergyADC, double *coreEnergyAccum, double *coreEnergyOther, bool CalculateclkFreq, double*clkPeriod);
 		

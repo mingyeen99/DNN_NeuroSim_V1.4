@@ -78,9 +78,7 @@ void Precharger::CalculateArea(double _newHeight, double _newWidth, AreaModify _
 		area = 0;
 		height = 0;
 		width = 0;
-
-		// 230920 update
-		double hUnit = hBitlinePrecharger*2 + hBitlineEqual ;
+		double hUnit = hBitlinePrecharger + hBitlineEqual * 2;
 		double wUnit = MAX(wBitlinePrecharger, wBitlineEqual);
 
 		if (_newWidth && _option==NONE) {
@@ -121,7 +119,7 @@ void Precharger::CalculateArea(double _newHeight, double _newWidth, AreaModify _
 	}
 }
 
-void Precharger::CalculateLatency(double _rampInput, double _capLoad, double numRead, double numWrite){
+void Precharger::CalculateLatency(double _rampInput, double _capLoad, double numRead, double numWrite, int M3D){
 	if (!initialized) {
 		cout << "[Precharger] Error: Require initialization first!" << endl;
 	} else {
@@ -136,7 +134,7 @@ void Precharger::CalculateLatency(double _rampInput, double _capLoad, double num
 		double resPullUp;
 		double tau;
 
-		resPullUp = CalculateOnResistance(widthPMOSBitlinePrecharger, PMOS, inputParameter.temperature, tech);
+		resPullUp = CalculateOnResistance(widthPMOSBitlinePrecharger, PMOS, inputParameter.temperature, tech, M3D);
 		tau = resPullUp * (capLoad + capOutputBitlinePrecharger) + resLoad * capLoad / 2;
 		gm = CalculateTransconductance(widthPMOSBitlinePrecharger, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
@@ -156,17 +154,14 @@ void Precharger::CalculatePower(double numRead, double numWrite) {
 		readDynamicEnergy = 0;
 		writeDynamicEnergy = 0;
 		
-		// 230925 update
 		/* Leakage power */
-		leakage = 2*CalculateGateLeakage(INV, 1, 0, widthPMOSBitlinePrecharger, inputParameter.temperature, tech) * tech.vdd * numCol;
+		leakage = CalculateGateLeakage(INV, 1, 0, widthPMOSBitlinePrecharger, inputParameter.temperature, tech) * tech.vdd * numCol;
 
 		/* Dynamic energy */
 		// Read
-		readDynamicEnergy = capLoad * tech.vdd * tech.vdd * MIN(numReadCellPerOperationNeuro, numCol);   // BL and BL_bar
+		readDynamicEnergy = capLoad * tech.vdd * tech.vdd * MIN(numReadCellPerOperationNeuro, numCol) * 2;   // BL and BL_bar
 		readDynamicEnergy *= numRead;
 		// Write
-
-		// 1.4 update : update precharge write energy
 		writeDynamicEnergy = capLoad * tech.vdd * tech.vdd * MIN(numWriteCellPerOperationNeuro, numCol*activityColWrite);
 		writeDynamicEnergy *= numWrite;
 	}

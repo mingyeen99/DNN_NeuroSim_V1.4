@@ -55,8 +55,6 @@
 #include "formula.h"
 #include "Param.h"
 #include "Chip.h"
-// Anni update
-#include "XYBus.h"			  
 
 using namespace std;
 
@@ -67,8 +65,6 @@ int numBufferCore = 0;
 /*** Circuit Modules ***/
 Buffer *globalBuffer;
 HTree *GhTree;
-// Anni update
-XYBus *GBus;							  
 AdderTree *Gaccumulation;
 Sigmoid *Gsigmoid;
 BitShifter *GreLu;
@@ -80,8 +76,6 @@ vector<int> ChipDesignInitialize(InputParameter& inputParameter, Technology& tec
 
 	globalBuffer = new Buffer(inputParameter, tech, cell);
 	GhTree = new HTree(inputParameter, tech, cell);
-	// Anni update
-	GBus = new XYBus(inputParameter, tech, cell);												
 	Gaccumulation = new AdderTree(inputParameter, tech, cell);
 	Gsigmoid = new Sigmoid(inputParameter, tech, cell);
 	GreLu = new BitShifter(inputParameter, tech, cell);
@@ -118,10 +112,9 @@ vector<int> ChipDesignInitialize(InputParameter& inputParameter, Technology& tec
 			}
 		}
 		*numPENM = numPE;
-
 		// mark the layers that use novel mapping
 		for (int i=0; i<numLayer; i++) {
-
+			
 			if ((netStructure[i][3]*netStructure[i][4]== (*numPENM))
 				// large Cov layers use novel mapping
 				&&(netStructure[i][2]*netStructure[i][3]*netStructure[i][4]*numRowPerSynapse >= param->numRowSubArray)) {
@@ -135,9 +128,6 @@ vector<int> ChipDesignInitialize(InputParameter& inputParameter, Technology& tec
 				*maxTileSizeCM = max(minCube, (*maxTileSizeCM));
 			}
 		}
-		
-
-
 	} else {
 		// all layers use conventional mapping
 		for (int i=0; i<numLayer; i++) {
@@ -221,7 +211,6 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			vector<double> initialDesignNM;
 			initialDesignNM = TileDesignNM((*desiredPESizeNM), markNM, netStructure, numRowPerSynapse, numColPerSynapse, numPENM);
 			*desiredNumTileNM = initialDesignNM[0];
-
 			for (double thisPESize = MAX(maxPESizeNM, 2*param->numRowSubArray); thisPESize> 2*param->numRowSubArray; thisPESize/=2) {
 				// for layers use novel mapping
 				double thisUtilization = 0;
@@ -331,7 +320,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 	*numTileRow = ceil((double)sqrt((double)(*desiredNumTileCM)+(double)(*desiredNumTileNM)));
 	*numTileCol = ceil((double)((*desiredNumTileCM)+(*desiredNumTileNM))/(double)(*numTileRow));
 	
-	vector<vector<double> > tileLocaEachLayer;	// start location of each layer
+	vector<vector<double> > tileLocaEachLayer;
 	vector<double> tileLocaEachLayerRow;
 	vector<double> tileLocaEachLayerCol;
 	double thisTileTotal;
@@ -342,7 +331,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 		} else {
 			thisTileTotal += numTileEachLayer[0][i]*numTileEachLayer[1][i];
 			tileLocaEachLayerRow.push_back((int)thisTileTotal/(*numTileRow));
-			tileLocaEachLayerCol.push_back((int)thisTileTotal%(*numTileRow));
+			tileLocaEachLayerCol.push_back((int)thisTileTotal%(*numTileRow)-1);
 		}
 	}
 	tileLocaEachLayer.push_back(tileLocaEachLayerRow);
@@ -406,116 +395,39 @@ void ChipInitialize(InputParameter& inputParameter, Technology& tech, MemCell& c
 	}
 	
 	// define bufferSize for inference operation
+	int bufferSize = param->numBitInput*maxLayerInput;										 
 	
-	// 230920 update
-	int bufferSize;
-	if (param->sync_data_transfer) {
-		bufferSize = param->numBitInput*maxLayerInput*2;
-	}
-	else {
-		bufferSize = param->numBitInput*maxLayerInput;	
-	}
-
 	//globalBuffer->Initialize(param->numBitInput*maxLayerInput, globalBusWidth, 1, param->unitLengthWireResistance, param->clkFreq, param->globalBufferType);
-	numBufferCore = ceil((double) bufferSize/((double) param->globalBufferCoreSizeRow*(double) param->globalBufferCoreSizeCol));
+	numBufferCore = ceil(bufferSize/(param->globalBufferCoreSizeRow*param->globalBufferCoreSizeCol));
 	//numBufferCore = ceil(1.5*numBufferCore);
+	globalBuffer->Initialize((param->globalBufferCoreSizeRow*param->globalBufferCoreSizeCol), param->globalBufferCoreSizeCol, 1, param->unitLengthWireResistance, param->clkFreq, param->globalBufferType);
 	
-	// 230920 update
-	if (param->sync_data_transfer) {
-		globalBuffer->Initialize((param->globalBufferCoreSizeRow*param->globalBufferCoreSizeCol), globalBusWidth, 1, param->unitLengthWireResistance, param->clkFreq, param->globalBufferType);
-	}
-	else {
-		globalBuffer->Initialize((param->globalBufferCoreSizeRow*param->globalBufferCoreSizeCol), param->globalBufferCoreSizeCol, 1, param->unitLengthWireResistance, param->clkFreq, param->globalBufferType);
-	}
-
-	// maxPool->Initialize(param->numBitInput, 2*2, (desiredTileSizeCM), param->clkFreq);
-	// 230920 update
-	maxPool->Initialize(param->numBitInput, 2*2,  max((desiredTileSizeCM/(double) param->numColMuxed), desiredPESizeNM/(double) param->numColMuxed), param->clkFreq);
-	
-	// Anni update
-	if (param->globalBusType) {
-	
-		// 230920 update
-		double areaNMTile, areaCMTile;
-		double NMheight, NMwidth, CMheight, CMwidth;
-
-		if (param->novelMapping) {
-			areaNMTile = TileCalculateArea(numPENM, desiredPESizeNM, true, &NMheight, &NMwidth)[5];
-			areaCMTile = TileCalculateArea(pow(ceil((double) desiredTileSizeCM/(double) desiredPESizeCM), 2), desiredPESizeCM, false, &CMheight, &CMwidth)[5];
-			
-			// assigning # of NM tiles for CM tiles		
-			double eq_CMT = areaNMTile; 
-			double index = 1; 
-
-			if ( eq_CMT < areaCMTile) {
-				while (eq_CMT < areaCMTile )
-					{	
-						index = index + 1; 
-						eq_CMT = index * areaNMTile; 
-					}
-			}
-
-			int total_eq_NMT = index * desiredNumTileCM +  desiredNumTileNM;
-			double row_tile_number = total_eq_NMT * 2.0;
-			double column_tile_number = 1.0 ;
-			double periphery = 0;
-			
-			while ( ((double)(row_tile_number-column_tile_number)/(double)row_tile_number) > 0.2  ) {
-
-					periphery = total_eq_NMT * 2;
-					for (int m=1; m<=floor((double) total_eq_NMT/2.0); m++) {
-						if ((total_eq_NMT % m == 0) && ((m + (double)total_eq_NMT/(double)m) < periphery)) 
-							{ periphery = m + (double) total_eq_NMT/(double) m; 
-							row_tile_number = (double) total_eq_NMT/(double) m; 
-							column_tile_number = m;
-							}
-					}
-					
-				if (((double)(row_tile_number-column_tile_number)/(double)row_tile_number) > 0.2) total_eq_NMT = total_eq_NMT + 1;
-
-			}
-
-			param->totaltile_num = total_eq_NMT;
-			if (param->sync_data_transfer) GhTree->Initialize(row_tile_number, column_tile_number, param->globalBusDelayTolerance, globalBusWidth, param->clkFreq);
-			else GhTree->Initialize((numTileRow), (numTileCol), param->globalBusDelayTolerance, globalBusWidth, param->clkFreq);
-		} else {
-			GhTree->Initialize((numTileRow), (numTileCol), param->globalBusDelayTolerance, globalBusWidth, param->clkFreq);
-		}
-	
-	} else {
-		GBus->Initialize((numTileRow), (numTileCol), param->globalBusDelayTolerance, globalBusWidth, param->clkFreq);
-	}
+	maxPool->Initialize(param->numBitInput, 2*2, (desiredTileSizeCM), param->clkFreq);
+	GhTree->Initialize((numTileRow), (numTileCol), param->globalBusDelayTolerance, globalBusWidth, param->clkFreq);
 	
 	//activation inside Tile or outside?
 	if (param->chipActivation) {
-		// Anni update: numBitSubarrayOutput
-		int numBitSubarrayOutput = 0;
-		if (param->parallelRead) {		
-			numBitSubarrayOutput = log2((double)param->levelOutput)+ceil(log2(ceil(param->numRowSubArray/param->numRowParallel)))+param->numBitInput+(param->numColPerSynapse-1)*param->cellBit+1;
-		} else{
-			numBitSubarrayOutput = ceil(log2((double)param->numRowSubArray))+param->cellBit+param->numBitInput+(param->numColPerSynapse-1)*param->cellBit+1;
-		}
-
 		int maxThroughputTile, maxAddFromSubArray;
 		if (param->novelMapping) {
-			// 230920 update
-			maxThroughputTile = (int) max((desiredTileSizeCM), ceil((desiredPESizeNM)));
-			// maxThroughputTile = (int) max((desiredTileSizeCM), ceil((double)sqrt(numPENM))*(desiredPESizeNM));
+			maxThroughputTile = (int) max((desiredTileSizeCM), ceil((double)sqrt(numPENM))*(desiredPESizeNM));
 			maxAddFromSubArray = (int) max(ceil((double)(desiredPESizeCM)/(double)param->numRowSubArray), ceil((double)(desiredPESizeNM)/(double)param->numRowSubArray));   // from subArray to ProcessingUnit
 			maxAddFromSubArray *= (int) max(ceil((double)(desiredTileSizeCM)/(double)(desiredPESizeCM)), ceil((double)sqrt(numPENM)));    // from ProcessingUnit to Tile
 			if (param->pipeline) {
 				maxThroughputTile *= (netStructure.size()+1);
 				maxAddFromSubArray *= (netStructure.size()+1);
 			}
-			// Anni update
-			Gaccumulation->Initialize((int) maxTileAdded, numBitSubarrayOutput+ceil(log2((double) maxAddFromSubArray)), ceil((double) maxThroughputTile/(double) param->numColMuxed), param->clkFreq);
-
+			if (param->parallelRead) {
+				Gaccumulation->Initialize((int) maxTileAdded, ceil((double) log2((double) param->levelOutput))+param->numBitInput+param->numColPerSynapse+1+ceil((double) log2((double) maxAddFromSubArray)), 
+										ceil((double) maxThroughputTile/(double) param->numColMuxed), param->clkFreq);
+			} else {
+				Gaccumulation->Initialize((int) maxTileAdded, ceil((double) log2((double) param->numRowSubArray)+(double) param->cellBit-1)+param->numBitInput+param->numColPerSynapse+1+ceil((double) log2((double) maxAddFromSubArray)), 
+										ceil((double) maxThroughputTile/(double) param->numColMuxed), param->clkFreq);
+			}
 			if (param->reLu) {
 				GreLu->Initialize(ceil((double) maxThroughputTile/(double) param->numColMuxed), param->numBitInput, param->clkFreq);
 			} else {
-				// 1.4 update; Anni update
-				Gsigmoid->Initialize(param->Activationtype, param->numBitInput, numBitSubarrayOutput+ceil(log2((double) maxAddFromSubArray))+ceil(log2((double) maxTileAdded)), 
-									ceil((double) maxThroughputTile/(double) param->numColMuxed), param->clkFreq);
+				Gsigmoid->Initialize(false, param->numBitInput, ceil((double) log2((double) param->numRowSubArray)+(double) param->cellBit-1)+param->numBitInput+param->numColPerSynapse+1+log2((double) maxAddFromSubArray)+ceil((double) log2((double) maxTileAdded)), 
+										ceil((double) maxThroughputTile/(double) param->numColMuxed), param->clkFreq);
 			}
 		} else {
 			maxAddFromSubArray = (int) ceil((double)(desiredPESizeCM)/(double)param->numRowSubArray);   // from subArray to ProcessingUnit
@@ -523,31 +435,38 @@ void ChipInitialize(InputParameter& inputParameter, Technology& tech, MemCell& c
 			if (param->pipeline) {
 				maxAddFromSubArray *= (netStructure.size()+1);
 			}
-			// Anni update
-			Gaccumulation->Initialize((int) maxTileAdded, numBitSubarrayOutput+ceil(log2((double)maxAddFromSubArray)), ceil((double)(desiredTileSizeCM)/(double)param->numColMuxed), param->clkFreq);
-
+			if (param->parallelRead) {
+				Gaccumulation->Initialize((int) maxTileAdded, ceil((double)log2((double)param->levelOutput))+param->numBitInput+param->numColPerSynapse+1+ceil((double)log2((double)maxAddFromSubArray)), 
+										ceil((double)(desiredTileSizeCM)/(double)param->numColMuxed), param->clkFreq);
+			} else {
+				Gaccumulation->Initialize((int) maxTileAdded, ceil((double)log2((double)param->numRowSubArray)+(double)param->cellBit-1)+param->numBitInput+param->numColPerSynapse+1+ceil((double)log2((double)maxAddFromSubArray)), 
+										ceil((double)(desiredTileSizeCM)/(double)param->numColMuxed), param->clkFreq);
+			}
 			if (param->reLu) {
 				GreLu->Initialize(ceil((double)(desiredTileSizeCM)/(double)param->numColMuxed), param->numBitInput, param->clkFreq);
 			} else {
-				// 1.4 update; Anni update
-				Gsigmoid->Initialize(param->Activationtype, param->numBitInput, numBitSubarrayOutput+ceil(log2((double) maxAddFromSubArray))+ceil(log2((double) maxTileAdded)), 
-									ceil((double) (desiredTileSizeCM)/(double) param->numColMuxed), param->clkFreq);
+				Gsigmoid->Initialize(false, param->numBitInput, ceil((double) log2((double) param->numRowSubArray)+(double) param->cellBit-1)+param->numBitInput+param->numColPerSynapse+1+log2((double) maxAddFromSubArray)+ceil((double) log2((double) maxTileAdded)), 
+										ceil((double) (desiredTileSizeCM)/(double) param->numColMuxed), param->clkFreq);
 			}
 		}
 	} else {   // activation inside tiles
 		int maxThroughputTile;
 		if (param->novelMapping) {
-
-			// 230920 update
-			maxThroughputTile = (int) max((desiredTileSizeCM), ceil((desiredPESizeNM)));
+			maxThroughputTile = (int) max((desiredTileSizeCM), ceil((double) sqrt((double) numPENM))*(double) (desiredPESizeNM));
 			if (param->pipeline) {
 				maxThroughputTile *= (netStructure.size()+1);
 			}
-			// Anni update
-			Gaccumulation->Initialize((int) maxTileAdded, param->numBitInput, ceil((double) maxThroughputTile/(double) param->numColMuxed), param->clkFreq);
+			if (param->parallelRead) {
+				Gaccumulation->Initialize((int) maxTileAdded, param->numBitInput, ceil((double) maxThroughputTile/(double) param->numColMuxed), param->clkFreq);
+			} else {
+				Gaccumulation->Initialize((int) maxTileAdded, param->numBitInput, ceil((double) maxThroughputTile/(double) param->numColMuxed), param->clkFreq);
+			}
 		} else {
-			// Anni update
-			Gaccumulation->Initialize((int) maxTileAdded, param->numBitInput, ceil((double) (desiredTileSizeCM)/(double) param->numColMuxed), param->clkFreq);
+			if (param->parallelRead) {
+				Gaccumulation->Initialize((int) maxTileAdded, param->numBitInput, ceil((double) (desiredTileSizeCM)/(double) param->numColMuxed), param->clkFreq);
+			} else {
+				Gaccumulation->Initialize((int) maxTileAdded, param->numBitInput, ceil((double) (desiredTileSizeCM)/(double) param->numColMuxed), param->clkFreq);
+			}
 		}
 	}
 }
@@ -589,21 +508,12 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 		double NMTileAreaAccum = areaNMTile[3];
 		double NMTileAreaOther = areaNMTile[4];
 		double NMTileAreaArray = areaNMTile[5];
-
-		// 230920 update
-		if (param->sync_data_transfer) area += NMTileArea*param->totaltile_num;
-		else area += NMTileArea*desiredNumTileNM;
-
+		area += NMTileArea*desiredNumTileNM;
 		areaIC += NMTileAreaIC*desiredNumTileNM;
 		areaADC += NMTileAreaADC*desiredNumTileNM;
 		areaAccum += NMTileAreaAccum*desiredNumTileNM;
 		areaOther += NMTileAreaOther*desiredNumTileNM;
-		
-		// 230920 update
-		if (param->sync_data_transfer) areaArray += NMTileAreaArray*param->totaltile_num;
-		else areaArray += NMTileAreaArray*desiredNumTileNM;	
-		
-		
+		areaArray += NMTileAreaArray*desiredNumTileNM;
 		*NMTileheight = NMheight;
 		*NMTilewidth = NMwidth;
 	}
@@ -615,20 +525,12 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 	double CMTileAreaAccum = areaCMTile[3];
 	double CMTileAreaOther = areaCMTile[4];
 	double CMTileAreaArray = areaCMTile[5];
-
-	// 230920 update
-	if (param->sync_data_transfer) area += 0;
-	else area += CMTileArea*desiredNumTileCM;
-
-	
+	area += CMTileArea*desiredNumTileCM;
 	areaIC += CMTileAreaIC*desiredNumTileCM;
 	areaADC += CMTileAreaADC*desiredNumTileCM;
 	areaAccum += CMTileAreaAccum*desiredNumTileCM;
 	areaOther += CMTileAreaOther*desiredNumTileCM;
-	
-	if (param->sync_data_transfer) areaArray += 0;
-	else areaArray += CMTileAreaArray*desiredNumTileCM;
-	
+	areaArray += CMTileAreaArray*desiredNumTileCM;
 	*CMTileheight = CMheight;
 	*CMTilewidth = CMwidth;
 	
@@ -637,15 +539,9 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 	double globalBufferArea = globalBuffer->area*numBufferCore;
 	double globalBufferHeight = numTileRow*max(NMheight, CMheight);
 	double globalBufferWidth = globalBufferArea/globalBufferHeight;														
-	// Anni update
-	if (param->globalBusType) {
-		GhTree->CalculateArea(max(NMheight, CMheight), max(NMwidth, CMwidth), param->treeFoldedRatio);
-		area += GhTree->area;
-		areaIC += GhTree->area;
-	} else {													
-		GBus->CalculateArea(max(NMheight, CMheight), max(NMwidth, CMwidth), param->treeFoldedRatio);
-		area += GBus->area;
-		areaIC += GBus->area;
+	GhTree->CalculateArea(max(NMheight, CMheight), max(NMwidth, CMwidth), param->treeFoldedRatio);
+	if (param->M3D) {
+		GhTree->area /=2;
 	}
 	maxPool->CalculateUnitArea(NONE);
 	maxPool->CalculateArea(globalBufferWidth);
@@ -667,9 +563,8 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 		}
 	}
 	
-	// Anni update: GhTree->area added before
-	area += globalBufferArea + maxPool->area + Gaccumulation->area;
-	
+	area += globalBufferArea + GhTree->area + maxPool->area + Gaccumulation->area;
+	areaIC += GhTree->area;
 	areaResults.push_back(area);
 	areaResults.push_back(areaIC);
 	areaResults.push_back(areaADC);
@@ -683,12 +578,12 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 	return areaResults;
 }
 
-// Anni update: add double *leakageSRAMInUse
+
 double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech, MemCell& cell, int layerNumber, const string &newweightfile, const string &oldweightfile, const string &inputfile, bool followedByMaxPool, 
 							const vector<vector<double> > &netStructure, const vector<int> &markNM, const vector<vector<double> > &numTileEachLayer, const vector<vector<double> > &utilizationEachLayer, 
-							const vector<vector<double> > &speedUpEachLayer, const vector<vector<double> > &tileLocaEachLayer, double numPENM, double desiredPESizeNM, double desiredTileSizeCM, 
+							const vector<vector<double> > &speedUpEachLayer, const vector<vector<double> > &tileLocaEachLayer, const vector<int> &partition3D, double numPENM, double desiredPESizeNM, double desiredTileSizeCM, 
 							double desiredPESizeCM, double CMTileheight, double CMTilewidth, double NMTileheight, double NMTilewidth,
-							double *readLatency, double *readDynamicEnergy, double *leakage, double *leakageSRAMInUse, double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy, 
+							double *readLatency, double *readDynamicEnergy, double *leakage, double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy, 
 							double *coreLatencyADC, double *coreLatencyAccum, double *coreLatencyOther, double *coreEnergyADC, double *coreEnergyAccum, double *coreEnergyOther, bool CalculateclkFreq, double *clkPeriod) {
 	
 	
@@ -711,8 +606,6 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 	*readLatency = 0;
 	*readDynamicEnergy = 0;
 	*leakage = 0;
-	// Anni update
-	*leakageSRAMInUse = 0;
 	*bufferLatency = 0;
 	*bufferDynamicEnergy = 0;
 	*icLatency = 0;
@@ -726,44 +619,16 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 	*coreLatencyOther = 0;
 	
 	double tileLeakage = 0;
-	// Anni update
-	double tileLeakageSRAMInUse = 0;
-
-	// Anni update: update Clock frequency
-	if(!CalculateclkFreq) {	
-		globalBuffer->clkFreq = param->clkFreq; 
-		GhTree->clkFreq = param->clkFreq; 
-		GBus->clkFreq = param->clkFreq; 						  
-		Gaccumulation->clkFreq = param->clkFreq; 
-		Gsigmoid->clkFreq = param->clkFreq; 
-		GreLu->clkFreq = param->clkFreq; 
-		maxPool->clkFreq = param->clkFreq; 
-	}
-
-	int numInVector = (netStructure[l][0]-netStructure[l][3]+1)/netStructure[l][7]*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][7];
 	
-	// 230920 update
+	int numInVector = (netStructure[l][0]-netStructure[l][3]+1)/netStructure[l][7]*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][7];
 	int totalNumTile = 0;
-	int totalInput=0; 
-
 	for (int i=0; i<netStructure.size(); i++) {
 		totalNumTile += numTileEachLayer[0][i] * numTileEachLayer[1][i];
-		if (markNM[l]==0){
-			totalInput += netStructure[l][2]*netStructure[l][3]*netStructure[l][4] * (netStructure[l][0]-netStructure[l][3]+1)/netStructure[l][7]*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][7];
-		}
-		else {
-			totalInput += netStructure[l][2]*netStructure[l][4] * (netStructure[l][0]-netStructure[l][3]+1)/netStructure[l][7]*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][7];
-		}	
-	
 	}
-	// Anni update:
-	double totalnumTileRow = ceil((double)sqrt(totalNumTile));
-	double totalnumTileCol = ceil((double)(totalNumTile)/(double)(totalnumTileRow));																			 
 	
 	if (markNM[l] == 0) {   // conventional mapping
 		for (int i=0; i<ceil((double) netStructure[l][2]*(double) netStructure[l][3]*(double) netStructure[l][4]*(double) numRowPerSynapse/desiredTileSizeCM); i++) {       // # of tiles in row
 			for (int j=0; j<ceil((double) netStructure[l][5]*(double) numColPerSynapse/(double) desiredTileSizeCM); j++) {   // # of tiles in Column
-				
 				
 				double tileReadLatency = 0;
 				double tileReadDynamicEnergy = 0;
@@ -787,10 +652,9 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 				
 				vector<vector<double> > tileInput;
 				tileInput = CopyInput(inputVector, i*desiredTileSizeCM, numInVector*param->numBitInput, numRowMatrix);
-
-				// Anni update: add &tileLeakageSRAMInUse
-				TileCalculatePerformance(tileMemory, tileMemory, tileInput, markNM[l], ceil((double)desiredTileSizeCM/(double)desiredPESizeCM), desiredPESizeCM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
-									numRowMatrix, numColMatrix, numInVector*param->numBitInput, cell, &tileReadLatency, &tileReadDynamicEnergy, &tileLeakage, &tileLeakageSRAMInUse,
+				
+				TileCalculatePerformance(tileMemory, tileMemory, tileInput, partition3D, markNM[l], ceil((double)desiredTileSizeCM/(double)desiredPESizeCM), desiredPESizeCM, speedUpEachLayer[0][l], speedUpEachLayer[1][l], 
+									numRowMatrix, numColMatrix, numInVector*param->numBitInput, cell, &tileReadLatency, &tileReadDynamicEnergy, &tileLeakage,
 									&tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy, 
 									&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther, CalculateclkFreq, clkPeriod);
 
@@ -815,121 +679,62 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 				if (param->reLu) {
 					GreLu->CalculateLatency(ceil(numInVector*netStructure[l][5]/(double) GreLu->numUnit));
 					GreLu->CalculatePower(ceil(numInVector*netStructure[l][5]/(double) GreLu->numUnit));
-					
-					// 230920 update
-					if (!param->sync_data_transfer) {
 					*readLatency += GreLu->readLatency;
-					*coreLatencyOther += GreLu->readLatency;
-					}
-
 					*readDynamicEnergy += GreLu->readDynamicEnergy;
+					*coreLatencyOther += GreLu->readLatency;
 					*coreEnergyOther += GreLu->readDynamicEnergy;
-
 				} else {
-					Gsigmoid->CalculateLatency(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry));
+					Gsigmoid->CalculateLatency(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry), partition3D[2]);
 					Gsigmoid->CalculatePower(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry));
-					
-					// 230920 update
-					if (!param->sync_data_transfer) {
 					*readLatency += Gsigmoid->readLatency;
-					*coreLatencyOther += Gsigmoid->readLatency;
-					}
-
 					*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
-					
+					*coreLatencyOther += Gsigmoid->readLatency;
 					*coreEnergyOther += Gsigmoid->readDynamicEnergy;
 				}
 			}
 			
-			if (numTileEachLayer[0][l] > 1) { 
-				// 230920 update  
-				Gaccumulation->CalculateLatency(ceil(weightMatrixCol/numColPerSynapse  *(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0);
-				Gaccumulation->CalculatePower(ceil(weightMatrixCol/numColPerSynapse  *(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l]);
-				
+			if (numTileEachLayer[0][l] > 1) {   
+				Gaccumulation->CalculateLatency(ceil(numTileEachLayer[1][l]*netStructure[l][5]*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0, partition3D[1]);
+				Gaccumulation->CalculatePower(ceil(numTileEachLayer[1][l]*netStructure[l][5]*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l]);
+				*readLatency += Gaccumulation->readLatency;
 				*readDynamicEnergy += Gaccumulation->readDynamicEnergy;
-				
-				
-				// 230920 update
-				if (!param->sync_data_transfer) {
-					*readLatency += Gaccumulation->readLatency;
-					*coreLatencyAccum += Gaccumulation->readLatency;
-				}
-							
-				
+				*coreLatencyAccum += Gaccumulation->readLatency;
 				*coreEnergyAccum += Gaccumulation->readDynamicEnergy;
 			}
 			
 			// if this layer is followed by Max Pool
 			if (followedByMaxPool) {
-
-				// 230920 update
-				maxPool->CalculateLatency(1e20, 0, ceil((double) (numInVector * weightMatrixCol/numColPerSynapse/(double) maxPool->window)/maxPool->numMaxPooling));
-				maxPool->CalculatePower(ceil((double) (numInVector * weightMatrixCol/numColPerSynapse/(double) maxPool->window)/maxPool->numMaxPooling));
-
-				if (!param->sync_data_transfer) {
-					*readLatency += maxPool->readLatency;
-					*coreLatencyOther += maxPool->readLatency; 
-				}
-
+				maxPool->CalculateLatency(1e20, 0, ceil((double) (numInVector/(double) maxPool->window)/(double) desiredTileSizeCM), partition3D[2]);
+				maxPool->CalculatePower(ceil((double) (numInVector/maxPool->window)/(double) desiredTileSizeCM));
+				*readLatency += maxPool->readLatency;
 				*readDynamicEnergy += maxPool->readDynamicEnergy;
-				
+				*coreLatencyOther += maxPool->readLatency;
 				*coreEnergyOther += maxPool->readDynamicEnergy;
 			}							  
 			
 			double numBitToLoadOut = weightMatrixRow*param->numBitInput*numInVector;
 			double numBitToLoadIn = ceil(weightMatrixCol/param->numColPerSynapse)*param->numBitInput*numInVector/(netStructure[l][6]? 4:1);
 			
-			// Anni update
-			if (param->globalBusType) {
-				
-				// 230920 update
-				double fraction = netStructure[l][2]*netStructure[l][3]*netStructure[l][4] * (netStructure[l][0]-netStructure[l][3]+1)/netStructure[l][7]*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][7];
-
-				if (param->novelMapping && param->sync_data_transfer) GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/floor(GhTree->busWidth*(fraction/totalInput))));
-				else GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/ceil(GhTree->busWidth*(numTileEachLayer[0][l]*numTileEachLayer[1][l]/totalNumTile))));
-				if (param->novelMapping && param->sync_data_transfer) GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, ceil(GhTree->busWidth*(fraction/totalInput)), 
-							ceil((numBitToLoadOut*param->inputtoggle)/floor(GhTree->busWidth*(fraction/totalInput) )) + ceil((numBitToLoadIn*param->outputtoggle)/floor(GhTree->busWidth*(fraction/totalInput) ) ) );
-				else GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, ceil(GhTree->busWidth*(numTileEachLayer[0][l]*numTileEachLayer[1][l]/totalNumTile)), 
-							ceil((numBitToLoadOut*param->inputtoggle)/ceil(GhTree->busWidth*(numTileEachLayer[0][l]*numTileEachLayer[1][l]/totalNumTile) )) + ceil((numBitToLoadIn*param->outputtoggle)/ceil(GhTree->busWidth*(numTileEachLayer[0][l]*numTileEachLayer[1][l]/totalNumTile) ) ) );
-				
-				// GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
-				// GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, GhTree->busWidth, 
-				// 					ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
-			} else{
-				GBus->CalculateLatency(ceil(totalnumTileCol/2), ceil(totalnumTileRow/2), CMTileheight, CMTilewidth, \
-									ceil(numBitToLoadOut/GBus->busWidth*totalnumTileRow/numTileEachLayer[0][l]), ceil(numBitToLoadIn/GBus->busWidth*totalnumTileCol/numTileEachLayer[1][l]));
-				GBus->CalculatePower(ceil(totalnumTileCol/2), ceil(totalnumTileRow/2), CMTileheight, CMTilewidth, numBitToLoadOut*param->inputtoggle, numBitToLoadIn*param->outputtoggle);
+			if (param->M3D) {
+				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight/2, CMTilewidth/2, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth), partition3D[3]);
+				GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight/2, CMTilewidth/2, GhTree->busWidth, 
+								ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
+			} else {
+				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth), partition3D[3]);
+				GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, GhTree->busWidth, 
+								ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
 			}
-
-			// 230920 update
-			double chip_bufferclk = max(GhTree->critical_latency, 1.0); 
-			
 			globalBuffer->CalculateLatency(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
-									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
-			
+									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width, partition3D[2]);
 			globalBuffer->CalculatePower(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
 									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
 			
 			// since multi-core buffer has improve the parallelism
-
-			// 230920 update
-			if (param->sync_data_transfer) {
-				double fraction = netStructure[l][2]*netStructure[l][3]*netStructure[l][4] * (netStructure[l][0]-netStructure[l][3]+1)/netStructure[l][7]*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][7];
-				
-				globalBuffer->readLatency *= chip_bufferclk * ceil(totalInput/fraction);
-				globalBuffer->writeLatency *= chip_bufferclk * ceil(totalInput/fraction);
-			
-			} else {
-				// since multi-core buffer has improve the parallelism
-				globalBuffer->readLatency /= MIN(numBufferCore, ceil(globalBusWidth/globalBuffer->interface_width));
-				globalBuffer->writeLatency /= MIN(numBufferCore, ceil(globalBusWidth/globalBuffer->interface_width));
-								
-			}				
-			
-			// Anni update: 
+			globalBuffer->readLatency /= MIN(numBufferCore, ceil(globalBusWidth/globalBuffer->interface_width));
+			globalBuffer->writeLatency /= MIN(numBufferCore, ceil(globalBusWidth/globalBuffer->interface_width));
 			// each time, only a part of the ic is used to transfer data to a part of the tiles
-			// globalBuffer->readLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));
-			// globalBuffer->writeLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));
+			globalBuffer->readLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));
+			globalBuffer->writeLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));
 		}
 	} else {   // novel Mapping
 		for (int i=0; i<ceil((double) netStructure[l][2]*(double) numRowPerSynapse/(double) desiredPESizeNM); i++) {       // # of tiles in row
@@ -960,16 +765,16 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 									(int) netStructure[l][5]*numColPerSynapse/numtileEachLayerCol, numPENM, (int) netStructure[l][2]*numRowPerSynapse);
 
 				vector<vector<double> > tileInput;
-				tileInput = ReshapeInput(inputVector, i*desiredPESizeNM, numInVector*param->numBitInput, 
+				tileInput = ReshapeInput(inputVector, i*desiredPESizeNM, (int) (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, 
 									(int) netStructure[l][2]*numRowPerSynapse/numtileEachLayerRow, numPENM, (int) netStructure[l][2]*numRowPerSynapse);
-
-				// Anni update: add &tileLeakageSRAMInUse
-				TileCalculatePerformance(tileMemory, tileMemory, tileInput, markNM[l], numPENM, desiredPESizeNM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
+	
+				
+				TileCalculatePerformance(tileMemory, tileMemory, tileInput, partition3D, markNM[l], numPENM, desiredPESizeNM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
 									numRowMatrix, numColMatrix, numInVector*param->numBitInput, cell, 
-									&tileReadLatency, &tileReadDynamicEnergy, &tileLeakage, &tileLeakageSRAMInUse, &tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy,
+									&tileReadLatency, &tileReadDynamicEnergy, &tileLeakage, &tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy,
 									&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther, CalculateclkFreq, clkPeriod);
 				
-	
+				
 				*readLatency = MAX(tileReadLatency, (*readLatency));
 				*readDynamicEnergy += tileReadDynamicEnergy;
 				*bufferLatency = MAX(tilebufferLatency, (*bufferLatency));
@@ -991,146 +796,74 @@ double ChipCalculatePerformance(InputParameter& inputParameter, Technology& tech
 				if (param->reLu) {
 					GreLu->CalculateLatency(ceil(numInVector*netStructure[l][5]/(double) GreLu->numUnit));
 					GreLu->CalculatePower(ceil(numInVector*netStructure[l][5]/(double) GreLu->numUnit));
-					// 230920 update
-					if (!param->sync_data_transfer)	{
-						*readLatency += GreLu->readLatency;
-						*coreLatencyOther += GreLu->readLatency;
-					}
-
+					*readLatency += GreLu->readLatency;
 					*readDynamicEnergy += GreLu->readDynamicEnergy;
+					*coreLatencyOther += GreLu->readLatency;
 					*coreEnergyOther += GreLu->readDynamicEnergy;
-
 				} else {
-					Gsigmoid->CalculateLatency(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry));
+					Gsigmoid->CalculateLatency(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry), partition3D[2]);
 					Gsigmoid->CalculatePower(ceil(numInVector*netStructure[l][5]/Gsigmoid->numEntry));
-					
-					// 230920 update
-					if (!param->sync_data_transfer)	{	
-						*readLatency += Gsigmoid->readLatency;
-						*coreLatencyOther += Gsigmoid->readLatency;
-					}
-
+					*readLatency += Gsigmoid->readLatency;
 					*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
+					*coreLatencyOther += Gsigmoid->readLatency;
 					*coreEnergyOther += Gsigmoid->readDynamicEnergy;
 				}
 			}
 			
 			if (numTileEachLayer[0][l] > 1) {   
-				// 230920 update
-				Gaccumulation->CalculateLatency(ceil(weightMatrixCol/numColPerSynapse *(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0);
-				Gaccumulation->CalculatePower(ceil(weightMatrixCol/numColPerSynapse*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l]);
-
-				// 230920 update 
-				if (!param->sync_data_transfer) {
+				Gaccumulation->CalculateLatency(ceil(numTileEachLayer[1][l]*netStructure[l][5]*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0, partition3D[1]);
+				Gaccumulation->CalculatePower(ceil(numTileEachLayer[1][l]*netStructure[l][5]*(numInVector/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l]);
 				*readLatency += Gaccumulation->readLatency;
-				*coreLatencyAccum += Gaccumulation->readLatency;
-				}
-
 				*readDynamicEnergy += Gaccumulation->readDynamicEnergy;
+				*coreLatencyAccum += Gaccumulation->readLatency;
 				*coreEnergyAccum += Gaccumulation->readDynamicEnergy;
 			}
 			
 			// if this layer is followed by Max Pool
 			if (followedByMaxPool) {
-
-				// 230920 update
-				maxPool->CalculateLatency(1e20, 0, ceil((double) (numInVector * weightMatrixCol/numColPerSynapse/(double) maxPool->window)/maxPool->numMaxPooling));
-				maxPool->CalculatePower(ceil((double) (numInVector * weightMatrixCol/numColPerSynapse/(double) maxPool->window)/maxPool->numMaxPooling));
-				
-				// 230920 update
-				if (!param->sync_data_transfer) {
+				maxPool->CalculateLatency(1e20, 0, ceil((double) (numInVector/(double) maxPool->window)/(double) desiredPESizeNM*sqrt((double) numPENM)), partition3D[2]);
+				maxPool->CalculatePower(ceil((double) (numInVector/maxPool->window)/(double) desiredPESizeNM*sqrt((double) numPENM)));
 				*readLatency += maxPool->readLatency;
-				*coreLatencyOther += maxPool->readLatency;
-				}
-
 				*readDynamicEnergy += maxPool->readDynamicEnergy;
-				
+				*coreLatencyOther += maxPool->readLatency;
 				*coreEnergyOther += maxPool->readDynamicEnergy;
 			}
 			double numBitToLoadOut = weightMatrixRow*param->numBitInput*numInVector/netStructure[l][3];
 			double numBitToLoadIn = ceil(weightMatrixCol/param->numColPerSynapse)*param->numBitInput*numInVector/(netStructure[l][6]? 4:1);
 			
-			// Anni update
-			if (param->globalBusType) {
-
-				// 230920 update
-				double fraction = netStructure[l][2]*netStructure[l][4] * (netStructure[l][0]-netStructure[l][3]+1)/netStructure[l][7]*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][7];
-				
-				if (param->novelMapping && param->sync_data_transfer) GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/floor(GhTree->busWidth*(fraction/totalInput))));
-				else GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/ceil(GhTree->busWidth*(numTileEachLayer[0][l]*numTileEachLayer[1][l]/totalNumTile))));
-
-				if (param->novelMapping && param->sync_data_transfer) GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, ceil(GhTree->busWidth*(fraction/totalInput)), 
-																ceil((numBitToLoadOut*param->inputtoggle)/floor(GhTree->busWidth*(fraction/totalInput))) + ceil((numBitToLoadIn*param->outputtoggle)/floor(GhTree->busWidth*(fraction/totalInput))));
-				else GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, ceil(GhTree->busWidth*(numTileEachLayer[0][l]*numTileEachLayer[1][l]/totalNumTile)), 
-																ceil((numBitToLoadOut*param->inputtoggle)/ceil(GhTree->busWidth*(numTileEachLayer[0][l]*numTileEachLayer[1][l]/totalNumTile))) + ceil((numBitToLoadIn*param->outputtoggle)/ceil(GhTree->busWidth*(numTileEachLayer[0][l]*numTileEachLayer[1][l]/totalNumTile))));
-				// GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
-				// GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, GhTree->busWidth, 
-				// 				ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
+			if (param->M3D) {
+				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight/2, NMTilewidth/2, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth), partition3D[3]);
+				GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight/2, NMTilewidth/2, GhTree->busWidth, 
+								ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
 			} else {
-				GBus->CalculateLatency(ceil(totalnumTileCol/2), ceil(totalnumTileRow/2), NMTileheight, NMTilewidth, \
-									ceil(numBitToLoadOut/GBus->busWidth*totalnumTileRow/numTileEachLayer[0][l]), ceil(numBitToLoadIn/GBus->busWidth*totalnumTileCol/numTileEachLayer[1][l]));
-				GBus->CalculatePower(ceil(totalnumTileCol/2), ceil(totalnumTileRow/2), NMTileheight, NMTilewidth, numBitToLoadOut*param->inputtoggle, numBitToLoadIn*param->outputtoggle);
+				GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth), partition3D[3]);
+				GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, GhTree->busWidth, 
+								ceil((numBitToLoadOut+numBitToLoadIn)/GhTree->busWidth));
 			}
-
 			globalBuffer->CalculateLatency(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
-									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
+									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width, partition3D[2]);
 			globalBuffer->CalculatePower(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
 									globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
 			// since multi-core buffer has improve the parallelism
-			// cout<<"before numCore globalBuffer->readLatency: "<<globalBuffer->readLatency<<"	globalBuffer->writeLatency: "<<globalBuffer->writeLatency<<endl;
-			// cout<<"numBufferCore: "<<numBufferCore<<"	ceil(globalBusWidth/globalBuffer->interface_width): "<<ceil(globalBusWidth/globalBuffer->interface_width)<<endl;
-			
-			// 230920 update
-			double chip_bufferclk = max(GhTree->critical_latency, 1.0); 
-
-			// 230920 update
-			if (param->sync_data_transfer) {				
-				double fraction = netStructure[l][2]*netStructure[l][4] * (netStructure[l][0]-netStructure[l][3]+1)/netStructure[l][7]*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][7];
-				globalBuffer->readLatency *= chip_bufferclk * ceil(totalInput/fraction);
-				globalBuffer->writeLatency *= chip_bufferclk * ceil(totalInput/fraction);
-			}
-
-			else {
-				// since multi-core buffer has improve the parallelism
-				globalBuffer->readLatency /= MIN(numBufferCore, ceil(globalBusWidth/globalBuffer->interface_width));
-				globalBuffer->writeLatency /= MIN(numBufferCore, ceil(globalBusWidth/globalBuffer->interface_width));
-				// each time, only a part of the ic is used to transfer data to a part of the tiles				
-			}			
-
-			// Anni update
+			globalBuffer->readLatency /= MIN(numBufferCore, ceil(globalBusWidth/globalBuffer->interface_width));
+			globalBuffer->writeLatency /= MIN(numBufferCore, ceil(globalBusWidth/globalBuffer->interface_width));
 			// each time, only a part of the ic is used to transfer data to a part of the tiles
-			// globalBuffer->readLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));
-			// globalBuffer->writeLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));	
+			globalBuffer->readLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));
+			globalBuffer->writeLatency *= ceil(totalNumTile/(numTileEachLayer[0][l]*numTileEachLayer[1][l]));	
 		}
 	}		
 	if(!CalculateclkFreq){
-		if (param->sync_data_transfer) {
-			*bufferLatency += globalBuffer->readLatency + globalBuffer->writeLatency;
-			*icLatency = 0;
-			*readLatency += globalBuffer->readLatency + globalBuffer->writeLatency;
-			*coreLatencyOther = globalBuffer->readLatency + globalBuffer->writeLatency;
-		} 
-		else {
-
-			*bufferLatency += globalBuffer->readLatency + globalBuffer->writeLatency;
-			*icLatency += GhTree->readLatency + GBus->readLatency;
-			*readLatency += globalBuffer->readLatency + globalBuffer->writeLatency + GhTree->readLatency + GBus->readLatency;
-			*coreLatencyOther += globalBuffer->readLatency + globalBuffer->writeLatency + GhTree->readLatency + GBus->readLatency;
-		}
-
+		*bufferLatency += globalBuffer->readLatency + globalBuffer->writeLatency;
 		*bufferDynamicEnergy += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy;
-		//Anni update
+		*icLatency += GhTree->readLatency;
+		*icDynamicEnergy += GhTree->readDynamicEnergy;
 		
-		*icDynamicEnergy += GhTree->readDynamicEnergy + GBus->readDynamicEnergy;
-		
-		
-		*readDynamicEnergy += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy + GhTree->readDynamicEnergy + GBus->readDynamicEnergy;
-	
-		*coreEnergyOther += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy + GhTree->readDynamicEnergy + GBus->readDynamicEnergy;
+		*readLatency += globalBuffer->readLatency + globalBuffer->writeLatency + GhTree->readLatency;
+		*readDynamicEnergy += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy + GhTree->readDynamicEnergy;
+		*coreLatencyOther += globalBuffer->readLatency + globalBuffer->writeLatency + GhTree->readLatency;
+		*coreEnergyOther += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy + GhTree->readDynamicEnergy;
 
 		*leakage = tileLeakage;
-		// Anni update
-		*leakageSRAMInUse = tileLeakageSRAMInUse;
 	}
 	return 0;
 }

@@ -58,8 +58,8 @@ public:
 	void SaveOutput(const char* str);
 	void Initialize(BusMode _mode, int _numRow, int _numCol, double _delaytolerance, double _busWidth, double _unitHeight, double _unitWidth, double _clkFreq);
 	void CalculateArea(double foldedratio, bool overLap);
-	void CalculateLatency(double numRead);
-	void CalculatePower(double numBitAccess, double numRead, bool input);
+	void CalculateLatency(double numRead, int M3D);
+	void CalculatePower(double numBitAccess, double numRead);
 
 	/* Properties */
 	bool initialized;	/* Initialization flag */

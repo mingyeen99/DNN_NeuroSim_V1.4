@@ -52,17 +52,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 	if (initialized)
 		cout << "Warning: Already initialized!" << endl;
 
-	// 1.4 update : capacitance/oncurrent values for 14 nm and beyond (easy look-up purpose) - updated
-
-	double caplist [7] = {103.816,97.549,100.497,81.859,72.572, 79.74, 66.94}; // 69.369
-	double currentlist [7] = {595.045, 599.237, 562.048, 578.494, 641.463, 526.868, 460.979}; //  556.448
-	double currentlist_off [7] = {0.0001,0.000127, 0.000147, 0.000138, 0.000158, 0.0000733, 0.000169}; //0.000569
-	double eff_res_mul [7] = {2.09, 2.09, 2.05, 2.10, 2.14, 1.98, 2.05};
-	double gm [7] = {1415.34, 1803.50, 1785.37, 1820.90, 2018.04, 1968.85, 2401.75};
-	double vth_list [7] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1}; // dummy values, since we don't need them
-	double cap_draintotallist [7] = {2.499e-17, 2.668e-17, 2.224e-17, 2.076e-17, 1.791e-17, 1.543e-17, 1.409e-17};
-
-	// test 
 	featureSizeInNano = _featureSizeInNano;
 	featureSize = _featureSizeInNano * 1e-9;
 	transistorType = _transistorType;
@@ -76,7 +65,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 7.5e-8;
 				capIdealGate = 6.058401e-10;
 				capFringe = 6.119807e-10;
-				
 				effectiveResistanceMultiplier = 1.54;	/* from CACTI */
 				current_gmNmos=3.94E+02; 
 				current_gmPmos=2.61E+02;
@@ -102,6 +90,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 0.26e3; 
 				currentOnPmos[90]  = 0.25e3; 
 				currentOnPmos[100] = 0.24e3; 
+				
+				currentOnNmosTop[0]   = 0.903e3; 
+				currentOnNmosTop[10]  = 0.885e3; 
+				currentOnNmosTop[20]  = 0.864e3; 
+				currentOnNmosTop[30]  = 0.845e3; 
+				currentOnNmosTop[40]  = 0.825e3; 
+				currentOnNmosTop[50]  = 0.805e3; 
+				currentOnNmosTop[60]  = 0.786e3; 
+				currentOnNmosTop[70]  = 0.767e3; 
+				currentOnNmosTop[80]  = 0.748e3; 
+				currentOnNmosTop[90]  = 0.728e3; 
+				currentOnNmosTop[100] = 0.718e3; 
+				currentOnPmosTop[0]   = 0.377e3; 
+				currentOnPmosTop[10]  = 0.360e3; 
+				currentOnPmosTop[20]  = 0.333e3; 
+				currentOnPmosTop[30]  = 0.315e3; 
+				currentOnPmosTop[40]  = 0.298e3; 
+				currentOnPmosTop[50]  = 0.280e3; 
+				currentOnPmosTop[60]  = 0.263e3; 
+				currentOnPmosTop[70]  = 0.245e3; 
+				currentOnPmosTop[80]  = 0.227e3; 
+				currentOnPmosTop[90]  = 0.219e3; 
+				currentOnPmosTop[100] = 0.210e3; 
+				
 				currentOffNmos[0]  = 100.00e-3; 
 				currentOffNmos[10] = 119.90e-3; 
 				currentOffNmos[20] = 142.20e-3; 
@@ -132,7 +144,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 7.5e-8;
 				capIdealGate = 1.8574e-9;
 				capFringe = 9.530642e-10;
-				cap_draintotal = capFringe/2;
 				effectiveResistanceMultiplier = 1.54;	/* from CACTI */
 				current_gmNmos=3.87E+01;
 				current_gmPmos=5.67E+01;			
@@ -158,6 +169,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 75.25 ;
 				currentOnPmos[90]  = 70.08 ;
 				currentOnPmos[100] = 65.44 ;
+				
+				currentOnNmosTop[0]   = 0.291e3; 
+				currentOnNmosTop[10]  = 0.265e3; 
+				currentOnNmosTop[20]  = 0.242e3; 
+				currentOnNmosTop[30]  = 0.221e3; 
+				currentOnNmosTop[40]  = 0.203e3; 
+				currentOnNmosTop[50]  = 0.187e3; 
+				currentOnNmosTop[60]  = 0.174e3; 
+				currentOnNmosTop[70]  = 0.161e3; 
+				currentOnNmosTop[80]  = 0.150e3; 
+				currentOnNmosTop[90]  = 0.140e3; 
+				currentOnNmosTop[100] = 0.130e3; 
+				currentOnPmosTop[0]   = 0.146e3; 
+				currentOnPmosTop[10]  = 0.132e3; 
+				currentOnPmosTop[20]  = 0.119e3; 
+				currentOnPmosTop[30]  = 0.109e3; 
+				currentOnPmosTop[40]  = 0.100e3; 
+				currentOnPmosTop[50]  = 0.091e3; 
+				currentOnPmosTop[60]  = 0.084e3; 
+				currentOnPmosTop[70]  = 0.079e3; 
+				currentOnPmosTop[80]  = 0.073e3; 
+				currentOnPmosTop[90]  = 0.068e3; 
+				currentOnPmosTop[100] = 0.063e3;
+				
 				currentOffNmos[0]  = 100.20e-6;
 				currentOffNmos[10] = 135.90e-6;
 				currentOffNmos[20] = 181.20e-6;
@@ -190,7 +225,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 5.5e-8;
 				capIdealGate = 5.694423e-10;
 				capFringe = 5.652302e-10;
-				
 				effectiveResistanceMultiplier = 1.54;	/* from CACTI */
 				current_gmNmos=4.95E+02;
 				current_gmPmos=3.16E+02;			
@@ -216,6 +250,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 0.32e3; 
 				currentOnPmos[90]  = 0.31e3; 
 				currentOnPmos[100] = 0.29e3; 
+				
+				currentOnNmosTop[0]   = 1.018e3; 
+				currentOnNmosTop[10]  = 0.999e3; 
+				currentOnNmosTop[20]  = 0.980e3; 
+				currentOnNmosTop[30]  = 0.961e3; 
+				currentOnNmosTop[40]  = 0.942e3; 
+				currentOnNmosTop[50]  = 0.923e3; 
+				currentOnNmosTop[60]  = 0.904e3; 
+				currentOnNmosTop[70]  = 0.885e3; 
+				currentOnNmosTop[80]  = 0.856e3; 
+				currentOnNmosTop[90]  = 0.837e3; 
+				currentOnNmosTop[100] = 0.818e3; 
+				currentOnPmosTop[0]   = 0.482e3; 
+				currentOnPmosTop[10]  = 0.460e3; 
+				currentOnPmosTop[20]  = 0.426e3; 
+				currentOnPmosTop[30]  = 0.404e3; 
+				currentOnPmosTop[40]  = 0.381e3; 
+				currentOnPmosTop[50]  = 0.359e3; 
+				currentOnPmosTop[60]  = 0.336e3; 
+				currentOnPmosTop[70]  = 0.314e3; 
+				currentOnPmosTop[80]  = 0.291e3; 
+				currentOnPmosTop[90]  = 0.280e3; 
+				currentOnPmosTop[100] = 0.269e3; 
+				
 				currentOffNmos[0]  = 100.8e-3;	
 				currentOffNmos[10] = 120.8e-3;	
 				currentOffNmos[20] = 143.4e-3;	
@@ -244,9 +302,8 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				vdd = 1.2;
 				vth = 501.3229e-3;
 				phyGateLength = 5.5e-8;
-				capIdealGate = 1.5413e-9;
+				capIdealGate = 1.5413e-10;
 				capFringe = 9.601334e-10;
-				
 				effectiveResistanceMultiplier = 1.77;	/* from CACTI */
 				current_gmNmos=4.38E+01;
 				current_gmPmos=5.99E+01;			
@@ -272,6 +329,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 96.47  ;
 				currentOnPmos[90]  = 89.68  ;
 				currentOnPmos[100] = 83.62  ;
+				
+				currentOnNmosTop[0]   = 0.329e3; 
+				currentOnNmosTop[10]  = 0.299e3; 
+				currentOnNmosTop[20]  = 0.272e3; 
+				currentOnNmosTop[30]  = 0.249e3; 
+				currentOnNmosTop[40]  = 0.229e3; 
+				currentOnNmosTop[50]  = 0.111e3; 
+				currentOnNmosTop[60]  = 0.195e3; 
+				currentOnNmosTop[70]  = 0.181e3; 
+				currentOnNmosTop[80]  = 0.168e3; 
+				currentOnNmosTop[90]  = 0.157e3; 
+				currentOnNmosTop[100] = 0.147e3; 
+				currentOnPmosTop[0]   = 0.190e3; 
+				currentOnPmosTop[10]  = 0.170e3; 
+				currentOnPmosTop[20]  = 0.153e3; 
+				currentOnPmosTop[30]  = 0.139e3; 
+				currentOnPmosTop[40]  = 0.127e3; 
+				currentOnPmosTop[50]  = 0.116e3; 
+				currentOnPmosTop[60]  = 0.107e3; 
+				currentOnPmosTop[70]  = 0.099e3; 
+				currentOnPmosTop[80]  = 0.091e3; 
+				currentOnPmosTop[90]  = 0.085e3; 
+				currentOnPmosTop[100] = 0.079e3;
+				
 				currentOffNmos[0]  = 100.00e-6;
 				currentOffNmos[10] = 135.70e-6;
 				currentOffNmos[20] = 181.10e-6;
@@ -304,7 +385,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 3.5e-8;
 				capIdealGate = 4.868295e-10;
 				capFringe = 5.270361e-10;
-				cap_draintotal = capFringe/2;
 				effectiveResistanceMultiplier = 1.54;	/* from CACTI */
 				current_gmNmos=5.72E+02;
 				current_gmPmos=3.99E+02;			
@@ -330,6 +410,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 0.44e3; 
 				currentOnPmos[90]  = 0.41e3; 
 				currentOnPmos[100] = 0.39e3; 
+				
+				currentOnNmosTop[0]   = 1.066e3; 
+				currentOnNmosTop[10]  = 1.047e3; 
+				currentOnNmosTop[20]  = 1.028e3; 
+				currentOnNmosTop[30]  = 1.009e3; 
+				currentOnNmosTop[40]  = 0.990e3; 
+				currentOnNmosTop[50]  = 0.971e3; 
+				currentOnNmosTop[60]  = 0.952e3; 
+				currentOnNmosTop[70]  = 0.933e3; 
+				currentOnNmosTop[80]  = 0.904e3; 
+				currentOnNmosTop[90]  = 0.885e3; 
+				currentOnNmosTop[100] = 0.866e3; 
+				currentOnPmosTop[0]   = 0.648e3; 
+				currentOnPmosTop[10]  = 0.611e3; 
+				currentOnPmosTop[20]  = 0.574e3; 
+				currentOnPmosTop[30]  = 0.537e3; 
+				currentOnPmosTop[40]  = 0.509e3; 
+				currentOnPmosTop[50]  = 0.481e3; 
+				currentOnPmosTop[60]  = 0.454e3; 
+				currentOnPmosTop[70]  = 0.426e3; 
+				currentOnPmosTop[80]  = 0.407e3; 
+				currentOnPmosTop[90]  = 0.380e3; 
+				currentOnPmosTop[100] = 0.361e3; 
+				
 				currentOffNmos[0]  = 100.00e-3;	
 				currentOffNmos[10] = 119.70e-3;	
 				currentOffNmos[20] = 141.90e-3;	
@@ -360,7 +464,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 3.5e-8;
 				capIdealGate = 1.1926e-9;
 				capFringe = 9.62148e-10;
-				
 				effectiveResistanceMultiplier = 1.77;	/* from CACTI */
 				current_gmNmos=5.90E+01;
 				current_gmPmos=6.75E+01;			
@@ -386,6 +489,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 121.40 ;
 				currentOnPmos[90]  = 113.30 ;
 				currentOnPmos[100] = 106.10 ;
+				
+				currentOnNmosTop[0]   = 0.381e3; 
+				currentOnNmosTop[10]  = 0.345e3; 
+				currentOnNmosTop[20]  = 0.316e3; 
+				currentOnNmosTop[30]  = 0.289e3; 
+				currentOnNmosTop[40]  = 0.267e3; 
+				currentOnNmosTop[50]  = 0.246e3; 
+				currentOnNmosTop[60]  = 0.227e3; 
+				currentOnNmosTop[70]  = 0.212e3; 
+				currentOnNmosTop[80]  = 0.197e3; 
+				currentOnNmosTop[90]  = 0.185e3; 
+				currentOnNmosTop[100] = 0.173e3; 
+				currentOnPmosTop[0]   = 0.227e3; 
+				currentOnPmosTop[10]  = 0.206e3; 
+				currentOnPmosTop[20]  = 0.187e3; 
+				currentOnPmosTop[30]  = 0.170e3; 
+				currentOnPmosTop[40]  = 0.156e3; 
+				currentOnPmosTop[50]  = 0.145e3; 
+				currentOnPmosTop[60]  = 0.133e3; 
+				currentOnPmosTop[70]  = 0.124e3; 
+				currentOnPmosTop[80]  = 0.115e3; 
+				currentOnPmosTop[90]  = 0.108e3; 
+				currentOnPmosTop[100] = 0.101e3;
+				
 				currentOffNmos[0]  = 100.20e-6;
 				currentOffNmos[10] = 137.50e-6;
 				currentOffNmos[20] = 185.80e-6;
@@ -418,7 +545,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 3.0e-8;
 				capIdealGate = 4.091305e-10;
 				capFringe = 4.957928e-10;
-				
 				effectiveResistanceMultiplier = 1.54;	/* from CACTI */
 				current_gmNmos=7.37E+02;
 				current_gmPmos=6.30E+02;			
@@ -444,6 +570,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 0.78e3; 
 				currentOnPmos[90]  = 0.75e3; 
 				currentOnPmos[100] = 0.72e3; 
+				
+				currentOnNmosTop[0]   = 1.222e3; 
+				currentOnNmosTop[10]  = 1.193e3; 
+				currentOnNmosTop[20]  = 1.174e3; 
+				currentOnNmosTop[30]  = 1.145e3; 
+				currentOnNmosTop[40]  = 1.116e3; 
+				currentOnNmosTop[50]  = 1.087e3; 
+				currentOnNmosTop[60]  = 1.068e3; 
+				currentOnNmosTop[70]  = 1.039e3; 
+				currentOnNmosTop[80]  = 1.010e3; 
+				currentOnNmosTop[90]  = 0.981e3; 
+				currentOnNmosTop[100] = 0.962e3; 
+				currentOnPmosTop[0]   = 0.918e3; 
+				currentOnPmosTop[10]  = 0.884e3; 
+				currentOnPmosTop[20]  = 0.850e3; 
+				currentOnPmosTop[30]  = 0.816e3; 
+				currentOnPmosTop[40]  = 0.782e3; 
+				currentOnPmosTop[50]  = 0.748e3; 
+				currentOnPmosTop[60]  = 0.723e3; 
+				currentOnPmosTop[70]  = 0.689e3; 
+				currentOnPmosTop[80]  = 0.663e3; 
+				currentOnPmosTop[90]  = 0.638e3; 
+				currentOnPmosTop[100] = 0.612e3; 
+				
 				currentOffNmos[0]  = 100.00e-3;	
 				currentOffNmos[10] = 120.70e-3;	
 				currentOffNmos[20] = 144.10e-3;	
@@ -474,7 +624,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 3.0e-8;
 				capIdealGate = 8.930709e-10;
 				capFringe = 8.849901e-10;
-				
 				effectiveResistanceMultiplier = 1.77;	/* from CACTI */
 				current_gmNmos=1.32E+02;
 				current_gmPmos=8.65E+01;			
@@ -500,6 +649,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 165.80 ;
 				currentOnPmos[90]  = 155.80 ;
 				currentOnPmos[100] = 146.70 ;
+				
+				currentOnNmosTop[0]   = 0.481e3; 
+				currentOnNmosTop[10]  = 0.445e3; 
+				currentOnNmosTop[20]  = 0.411e3; 
+				currentOnNmosTop[30]  = 0.382e3; 
+				currentOnNmosTop[40]  = 0.355e3; 
+				currentOnNmosTop[50]  = 0.331e3; 
+				currentOnNmosTop[60]  = 0.310e3; 
+				currentOnNmosTop[70]  = 0.290e3; 
+				currentOnNmosTop[80]  = 0.272e3; 
+				currentOnNmosTop[90]  = 0.256e3; 
+				currentOnNmosTop[100] = 0.242e3; 
+				currentOnPmosTop[0]   = 0.289e3; 
+				currentOnPmosTop[10]  = 0.265e3; 
+				currentOnPmosTop[20]  = 0.244e3; 
+				currentOnPmosTop[30]  = 0.226e3; 
+				currentOnPmosTop[40]  = 0.210e3; 
+				currentOnPmosTop[50]  = 0.194e3; 
+				currentOnPmosTop[60]  = 0.182e3; 
+				currentOnPmosTop[70]  = 0.169e3; 
+				currentOnPmosTop[80]  = 0.159e3; 
+				currentOnPmosTop[90]  = 0.149e3; 
+				currentOnPmosTop[100] = 0.140e3;
+				
 				currentOffNmos[0]  = 100.00e-6;
 				currentOffNmos[10] = 140.50e-6;
 				currentOffNmos[20] = 193.90e-6;
@@ -532,7 +705,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 2.8e-8;
 				capIdealGate = 3.767721e-10;
 				capFringe = 4.713762e-10;
-			
 				effectiveResistanceMultiplier = 1.54;	/* from CACTI */
 				current_gmNmos=9.29E+02;
 				current_gmPmos=6.73E+02;			
@@ -558,6 +730,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 0.86e3; 
 				currentOnPmos[90]  = 0.82e3; 
 				currentOnPmos[100] = 0.78e3; 
+				
+				currentOnNmosTop[0]   = 1.317e3; 
+				currentOnNmosTop[10]  = 1.289e3; 
+				currentOnNmosTop[20]  = 1.261e3; 
+				currentOnNmosTop[30]  = 1.224e3; 
+				currentOnNmosTop[40]  = 1.196e3; 
+				currentOnNmosTop[50]  = 1.168e3; 
+				currentOnNmosTop[60]  = 1.130e3; 
+				currentOnNmosTop[70]  = 1.102e3; 
+				currentOnNmosTop[80]  = 1.074e3; 
+				currentOnNmosTop[90]  = 1.046e3; 
+				currentOnNmosTop[100] = 1.009e3; 
+				currentOnPmosTop[0]   = 1.215e3; 
+				currentOnPmosTop[10]  = 1.165e3; 
+				currentOnPmosTop[20]  = 1.115e3; 
+				currentOnPmosTop[30]  = 1.066e3; 
+				currentOnPmosTop[40]  = 1.016e3; 
+				currentOnPmosTop[50]  = 0.976e3; 
+				currentOnPmosTop[60]  = 0.936e3; 
+				currentOnPmosTop[70]  = 0.886e3; 
+				currentOnPmosTop[80]  = 0.856e3; 
+				currentOnPmosTop[90]  = 0.817e3; 
+				currentOnPmosTop[100] = 0.777e3; 
+				
 				currentOffNmos[0]  = 100.30e-3;	
 				currentOffNmos[10] = 120.40e-3;	
 				currentOffNmos[20] = 143.10e-3;	
@@ -588,7 +784,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 2.8e-8;
 				capIdealGate = 8.375279e-10;
 				capFringe = 6.856677e-10;
-		
 				effectiveResistanceMultiplier = 1.77;	/* from CACTI */
 				current_gmNmos=2.56E+02;
 				current_gmPmos=1.19E+02;			
@@ -614,6 +809,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 223.80;
 				currentOnPmos[90]  = 210.50;
 				currentOnPmos[100] = 198.40;
+				
+				currentOnNmosTop[0]   = 0.560e3; 
+				currentOnNmosTop[10]  = 0.525e3; 
+				currentOnNmosTop[20]  = 0.493e3; 
+				currentOnNmosTop[30]  = 0.463e3; 
+				currentOnNmosTop[40]  = 0.435e3; 
+				currentOnNmosTop[50]  = 0.410e3; 
+				currentOnNmosTop[60]  = 0.387e3; 
+				currentOnNmosTop[70]  = 0.365e3; 
+				currentOnNmosTop[80]  = 0.346e3; 
+				currentOnNmosTop[90]  = 0.328e3; 
+				currentOnNmosTop[100] = 0.311e3; 
+				currentOnPmosTop[0]   = 0.374e3; 
+				currentOnPmosTop[10]  = 0.344e3; 
+				currentOnPmosTop[20]  = 0.318e3; 
+				currentOnPmosTop[30]  = 0.294e3; 
+				currentOnPmosTop[40]  = 0.273e3; 
+				currentOnPmosTop[50]  = 0.254e3; 
+				currentOnPmosTop[60]  = 0.237e3; 
+				currentOnPmosTop[70]  = 0.222e3; 
+				currentOnPmosTop[80]  = 0.208e3; 
+				currentOnPmosTop[90]  = 0.196e3; 
+				currentOnPmosTop[100] = 0.185e3;
+				
 				currentOffNmos[0]  = 100.10e-6;
 				currentOffNmos[10] = 143.60e-6;
 				currentOffNmos[20] = 202.10e-6;
@@ -646,7 +865,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 2.6e-8;
 				capIdealGate = 3.287e-10;
 				capFringe = 4.532e-10;
-			
 				effectiveResistanceMultiplier = 1.54;	/* from CACTI */
 				current_gmNmos=1.08E+03;
 				current_gmPmos=6.98E+02;			
@@ -672,6 +890,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 0.88e3;
 				currentOnPmos[90]  = 0.84e3;
 				currentOnPmos[100] = 0.80e3;
+				
+				currentOnNmosTop[0]   = 1.400e3; 
+				currentOnNmosTop[10]  = 1.372e3; 
+				currentOnNmosTop[20]  = 1.335e3; 
+				currentOnNmosTop[30]  = 1.297e3; 
+				currentOnNmosTop[40]  = 1.260e3; 
+				currentOnNmosTop[50]  = 1.223e3; 
+				currentOnNmosTop[60]  = 1.195e3; 
+				currentOnNmosTop[70]  = 1.157e3; 
+				currentOnNmosTop[80]  = 1.120e3; 
+				currentOnNmosTop[90]  = 1.092e3; 
+				currentOnNmosTop[100] = 1.055e3; 
+				currentOnPmosTop[0]   = 1.314e3; 
+				currentOnPmosTop[10]  = 1.244e3; 
+				currentOnPmosTop[20]  = 1.185e3; 
+				currentOnPmosTop[30]  = 1.125e3; 
+				currentOnPmosTop[40]  = 1.065e3; 
+				currentOnPmosTop[50]  = 1.015e3; 
+				currentOnPmosTop[60]  = 0.966e3; 
+				currentOnPmosTop[70]  = 0.916e3; 
+				currentOnPmosTop[80]  = 0.876e3; 
+				currentOnPmosTop[90]  = 0.836e3; 
+				currentOnPmosTop[100] = 0.796e3; 
+				
 				currentOffNmos[0]  = 100.20e-3;	
 				currentOffNmos[10] = 120.40e-3;	
 				currentOffNmos[20] = 143.50e-3;	
@@ -702,7 +944,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				phyGateLength = 2.6e-8; 	
 				capIdealGate = 5.245e-10;
 				capFringe = 8.004e-10;
-			
 				effectiveResistanceMultiplier = 1.77;	/* from CACTI */
 				current_gmNmos=4.56E+02;
 				current_gmPmos=1.85E+02;			
@@ -728,6 +969,30 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80]  = 363.40;
 				currentOnPmos[90]  = 343.30;
 				currentOnPmos[100] = 324.80;
+				
+				currentOnNmosTop[0]   = 0.738e3; 
+				currentOnNmosTop[10]  = 0.706e3; 
+				currentOnNmosTop[20]  = 0.674e3; 
+				currentOnNmosTop[30]  = 0.643e3; 
+				currentOnNmosTop[40]  = 0.614e3; 
+				currentOnNmosTop[50]  = 0.586e3; 
+				currentOnNmosTop[60]  = 0.560e3; 
+				currentOnNmosTop[70]  = 0.535e3; 
+				currentOnNmosTop[80]  = 0.511e3; 
+				currentOnNmosTop[90]  = 0.489e3; 
+				currentOnNmosTop[100] = 0.469e3; 
+				currentOnPmosTop[0]   = 0.560e3; 
+				currentOnPmosTop[10]  = 0.524e3; 
+				currentOnPmosTop[20]  = 0.490e3; 
+				currentOnPmosTop[30]  = 0.459e3; 
+				currentOnPmosTop[40]  = 0.431e3; 
+				currentOnPmosTop[50]  = 0.405e3; 
+				currentOnPmosTop[60]  = 0.381e3; 
+				currentOnPmosTop[70]  = 0.359e3; 
+				currentOnPmosTop[80]  = 0.339e3; 
+				currentOnPmosTop[90]  = 0.320e3; 
+				currentOnPmosTop[100] = 0.302e3;
+				
 				currentOffNmos[0]  = 100.00e-6;
 				currentOffNmos[10] = 147.30e-6;
 				currentOffNmos[20] = 212.10e-6;
@@ -754,34 +1019,101 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 			}
 		} else if (featureSizeInNano == 14) {
 			if (deviceRoadmap == HP) {
-				
-				// 1.4 update
-				cout<<"HP for 14 nm and beyond is not supported"<<endl;
-				exit(-1);
-
-			} else {
-				// 1.4 update : device specifications follow IRDS 2016
+				/* PTM model: 14nfet_HP.pm,14pfet_HP.pm, from http://ptm.asu.edu/ */
 				vdd = 0.8;
-				vth = vth_list[0];
-				heightFin = 4.2e-8;
-				widthFin = 8.0e-9;
-				PitchFin = 4.8e-8;
-
-				// 1.4 update
-				max_fin_num =4;
-				effective_width=widthFin+heightFin*2;
-
-				phyGateLength = 2.6e-8; // 1.4 update : changed to 2.6e-8 following IRDS 2016
-				capIdealGate = caplist[0] * 1E-18 / (effective_width);
-				cap_draintotal = cap_draintotallist[0] / (effective_width);
+				vth = 172.9868e-3;
+				heightFin = 3.7e-8;				
+				widthFin = 8e-9;
+				PitchFin = 4.8e-8;			
+				phyGateLength = 2.2e-8;
+				capIdealGate = 1.2573e-9;
 				capFringe = 0;
-				effectiveResistanceMultiplier = eff_res_mul[0];	/* from CACTI */
-				current_gmNmos= gm[0];
-				current_gmPmos= gm[0];	
-				gm_oncurrent = gm[0];  // gm at on current
-
-
-				currentOnNmos[0]  = currentlist[0];
+				effectiveResistanceMultiplier = 1.51;	/* from CACTI */
+				current_gmNmos=1.33E+03;
+				current_gmPmos=7.83E+02;			
+				currentOnNmos[0]  = 1.686e3;
+				currentOnNmos[10] = 1.652e3;
+				currentOnNmos[20] = 1.607e3;
+				currentOnNmos[30] = 1.562e3;
+				currentOnNmos[40] = 1.517e3;
+				currentOnNmos[50] = 1.472e3;
+				currentOnNmos[60] = 1.439e3;
+				currentOnNmos[70] = 1.394e3;
+				currentOnNmos[80] = 1.349e3;
+				currentOnNmos[90] = 1.315e3;
+				currentOnNmos[100] =1.270e3;
+				currentOnPmos[0]  = 1.550e3;
+				currentOnPmos[10] = 1.468e3;
+				currentOnPmos[20] = 1.397e3;
+				currentOnPmos[30] = 1.327e3;
+				currentOnPmos[40] = 1.256e3;
+				currentOnPmos[50] = 1.198e3;
+				currentOnPmos[60] = 1.139e3;
+				currentOnPmos[70] = 1.080e3;
+				currentOnPmos[80] = 1.0336e3;
+				currentOnPmos[90] = 0.986e3;
+				currentOnPmos[100] =0.939e3;
+				
+				currentOnNmosTop[0]   = 1.606e3; 
+				currentOnNmosTop[10]  = 1.574e3; 
+				currentOnNmosTop[20]  = 1.531e3; 
+				currentOnNmosTop[30]  = 1.488e3; 
+				currentOnNmosTop[40]  = 1.445e3; 
+				currentOnNmosTop[50]  = 1.403e3; 
+				currentOnNmosTop[60]  = 1.370e3; 
+				currentOnNmosTop[70]  = 1.328e3; 
+				currentOnNmosTop[80]  = 1.285e3; 
+				currentOnNmosTop[90]  = 1.253e3; 
+				currentOnNmosTop[100] = 1.210e3; 
+				currentOnPmosTop[0]   = 1.422e3; 
+				currentOnPmosTop[10]  = 1.347e3; 
+				currentOnPmosTop[20]  = 1.282e3; 
+				currentOnPmosTop[30]  = 1.217e3; 
+				currentOnPmosTop[40]  = 1.153e3; 
+				currentOnPmosTop[50]  = 1.099e3; 
+				currentOnPmosTop[60]  = 1.045e3; 
+				currentOnPmosTop[70]  = 0.991e3; 
+				currentOnPmosTop[80]  = 0.948e3; 
+				currentOnPmosTop[90]  = 0.905e3; 
+				currentOnPmosTop[100] = 0.862e3; 
+				
+				currentOffNmos[0]  = 100.9152e-3;
+				currentOffNmos[10] = 150.0786e-3;
+				currentOffNmos[20] = 218.1063e-3;
+				currentOffNmos[30] = 310.359e-3;
+				currentOffNmos[40] = 433.1757e-3;
+				currentOffNmos[50] = 593.9313e-3;
+				currentOffNmos[60] = 801.0747e-3;
+				currentOffNmos[70] = 1.0641;
+				currentOffNmos[80] = 1.3938;
+				currentOffNmos[90] = 1.8016;
+				currentOffNmos[100] =2.30031;
+				currentOffPmos[0]  = 98.6503e-3;
+				currentOffPmos[10] = 157.5545e-3;
+				currentOffPmos[20] = 245.1751e-3;
+				currentOffPmos[30] = 372.5374e-3;
+				currentOffPmos[40] = 553.7661e-3;
+				currentOffPmos[50] = 806.5971e-3;
+				currentOffPmos[60] = 1.1529;
+				currentOffPmos[70] = 1.6190;
+				currentOffPmos[80] = 2.2361;
+				currentOffPmos[90] = 3.0405;
+				currentOffPmos[100] =4.0733;
+				pnSizeRatio = (int)(currentOnNmos[0]/currentOnPmos[0]);
+			} else {
+				/* PTM model: 14nfet_LP.pm,14pfet_LP.pm, from http://ptm.asu.edu/ */
+				vdd = 0.8;
+				vth = 382.1222e-3;
+				heightFin = 3.7e-8;
+				widthFin = 8e-9;
+				PitchFin = 4.8e-8;
+				phyGateLength = 2.2e-8;
+				capIdealGate = 1.0572e-9;
+				capFringe = 0;
+				effectiveResistanceMultiplier = 1.76;	/* from CACTI */
+				current_gmNmos=6.02E+02;
+				current_gmPmos=2.36E+02;			
+				currentOnNmos[0]  = 893;
 				currentOnNmos[10] = 853;
 				currentOnNmos[20] = 814;
 				currentOnNmos[30] = 777;
@@ -792,7 +1124,7 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnNmos[80] = 618;
 				currentOnNmos[90] = 591;
 				currentOnNmos[100] =565;
-				currentOnPmos[0]  = currentOnNmos[0];
+				currentOnPmos[0]  = 820;
 				currentOnPmos[10] = 767;
 				currentOnPmos[20] = 718;
 				currentOnPmos[30] = 672;
@@ -803,7 +1135,31 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80] = 496;
 				currentOnPmos[90] = 469;
 				currentOnPmos[100] =443;
-				currentOffNmos[0]  = currentlist_off[0];
+				
+				currentOnNmosTop[0]   = 0.850e3; 
+				currentOnNmosTop[10]  = 0.812e3; 
+				currentOnNmosTop[20]  = 0.776e3; 
+				currentOnNmosTop[30]  = 0.740e3; 
+				currentOnNmosTop[40]  = 0.707e3; 
+				currentOnNmosTop[50]  = 0.675e3; 
+				currentOnNmosTop[60]  = 0.645e3; 
+				currentOnNmosTop[70]  = 0.616e3; 
+				currentOnNmosTop[80]  = 0.589e3; 
+				currentOnNmosTop[90]  = 0.563e3; 
+				currentOnNmosTop[100] = 0.538e3; 
+				currentOnPmosTop[0]   = 0.781e3; 
+				currentOnPmosTop[10]  = 0.730e3; 
+				currentOnPmosTop[20]  = 0.683e3; 
+				currentOnPmosTop[30]  = 0.640e3; 
+				currentOnPmosTop[40]  = 0.601e3; 
+				currentOnPmosTop[50]  = 0.565e3; 
+				currentOnPmosTop[60]  = 0.531e3; 
+				currentOnPmosTop[70]  = 0.501e3; 
+				currentOnPmosTop[80]  = 0.473e3; 
+				currentOnPmosTop[90]  = 0.447e3; 
+				currentOnPmosTop[100] = 0.422e3;
+				
+				currentOffNmos[0]  = 99.7866e-6;
 				currentOffNmos[10] = 184.4553e-6;
 				currentOffNmos[20] = 328.7707e-6;
 				currentOffNmos[30] = 566.8658e-6;
@@ -829,35 +1185,101 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 			}
 		} else if (featureSizeInNano == 10) {
 			if (deviceRoadmap == HP) {
-
-				// 1.4 update
-				cout<<"HP for 14 nm and beyond is not supported"<<endl;
-				exit(-1);
-
-	  		} else {
-
-				// 1.4 update : device specifications follow IRDS 2017
+				/* PTM model: 10nfet_HP.pm,10pfet_HP.pm, from http://ptm.asu.edu/ */
 				vdd = 0.75;
-				vth = vth_list[1];
-				heightFin = 4.5e-8;	
-				widthFin = 8.0e-9;	
+				vth = 182.8605e-3;
+				heightFin = 4.2e-8;
+				widthFin = 6e-9;
 				PitchFin = 3.6e-8;			
-
-				// 1.4 update 
-				max_fin_num =3;
-				effective_width=widthFin+heightFin*2;
-
-				phyGateLength = 2.2e-8;	
-				capIdealGate = caplist[1] * 1E-18 / (effective_width);
-				cap_draintotal = cap_draintotallist[1]/ (effective_width);
+				phyGateLength = 2.0e-8;
+				capIdealGate = 1.1418e-9;
 				capFringe = 0;
-				effectiveResistanceMultiplier = eff_res_mul[1];	/* from CACTI */
-				current_gmNmos= gm[1];
-				current_gmPmos= gm[1];			
-				gm_oncurrent = gm[1];  // gm at on current
-
-
-				currentOnNmos[0]  = currentlist[1];
+				effectiveResistanceMultiplier = 1.49;	/* from CACTI */
+				current_gmNmos=1.56E+03;
+				current_gmPmos=8.02E+02;			
+				currentOnNmos[0]  = 1.769e3;
+				currentOnNmos[10] = 1.734e3;
+				currentOnNmos[20] = 1.686e3;
+				currentOnNmos[30] = 1.639e3;
+				currentOnNmos[40] = 1.592e3;
+				currentOnNmos[50] = 1.545e3;
+				currentOnNmos[60] = 1.510e3;
+				currentOnNmos[70] = 1.462e3;
+				currentOnNmos[80] = 1.415e3;
+				currentOnNmos[90] = 1.380e3;
+				currentOnNmos[100] =1.333e3;
+				currentOnPmos[0]  = 1.626e3;
+				currentOnPmos[10] = 1.540e3;
+				currentOnPmos[20] = 1.466e3;
+				currentOnPmos[30] = 1.392e3;
+				currentOnPmos[40] = 1.318e3;
+				currentOnPmos[50] = 1.256e3;
+				currentOnPmos[60] = 1.195e3;
+				currentOnPmos[70] = 1.133e3;
+				currentOnPmos[80] = 1.084e3;
+				currentOnPmos[90] = 1.035e3;
+				currentOnPmos[100] =0.985e3;
+				
+				currentOnNmosTop[0]   = 1.701e3; 
+				currentOnNmosTop[10]  = 1.667e3; 
+				currentOnNmosTop[20]  = 1.622e3; 
+				currentOnNmosTop[30]  = 1.576e3; 
+				currentOnNmosTop[40]  = 1.531e3; 
+				currentOnNmosTop[50]  = 1.486e3; 
+				currentOnNmosTop[60]  = 1.452e3; 
+				currentOnNmosTop[70]  = 1.406e3; 
+				currentOnNmosTop[80]  = 1.361e3; 
+				currentOnNmosTop[90]  = 1.328e3; 
+				currentOnNmosTop[100] = 1.281e3; 
+				currentOnPmosTop[0]   = 1.520e3; 
+				currentOnPmosTop[10]  = 1.439e3; 
+				currentOnPmosTop[20]  = 1.370e3; 
+				currentOnPmosTop[30]  = 1.301e3; 
+				currentOnPmosTop[40]  = 1.232e3; 
+				currentOnPmosTop[50]  = 1.175e3; 
+				currentOnPmosTop[60]  = 1.117e3; 
+				currentOnPmosTop[70]  = 1.059e3; 
+				currentOnPmosTop[80]  = 1.013e3; 
+				currentOnPmosTop[90]  = 0.967e3; 
+				currentOnPmosTop[100] = 0.921e3; 
+				
+				currentOffNmos[0]  = 100.1203e-3;
+				currentOffNmos[10] = 148.6272e-3;
+				currentOffNmos[20] = 215.6467e-3;
+				currentOffNmos[30] = 306.4157e-3;
+				currentOffNmos[40] = 427.1264e-3;
+				currentOffNmos[50] = 584.9857e-3;
+				currentOffNmos[60] = 788.2578e-3;
+				currentOffNmos[70] = 1.0463; 
+				currentOffNmos[80] = 1.3695; 
+				currentOffNmos[90] = 1.7694; 
+				currentOffNmos[100] =2.2584; 
+				currentOffPmos[0]  = 1.6268e-3;
+				currentOffPmos[10] = 157.8505e-3;
+				currentOffPmos[20] = 245.2725e-3;
+				currentOffPmos[30] = 372.2051e-3;
+				currentOffPmos[40] = 552.6667e-3;
+				currentOffPmos[50] = 804.2786e-3;
+				currentOffPmos[60] = 1.1488; 
+				currentOffPmos[70] = 1.6125; 
+				currentOffPmos[80] = 2.2268; 
+				currentOffPmos[90] = 3.0281; 
+				currentOffPmos[100] =4.0584;
+				pnSizeRatio = (int)(currentOnNmos[0]/currentOnPmos[0]);
+	  		} else {
+				/* PTM model: 10nfet_LP.pm,10pfet_LP.pm, from http://ptm.asu.edu/ */
+				vdd = 0.75;
+				vth = 390.5541e-3;
+				heightFin = 4.2e-8;		
+				widthFin = 6e-9;		
+				PitchFin = 3.6e-8;				
+				phyGateLength = 2e-8;	
+				capIdealGate = 9.418984e-10;
+				capFringe = 0;
+				effectiveResistanceMultiplier = 1.73;	/* from CACTI */
+				current_gmNmos=8.22E+02;
+				current_gmPmos=1.90E+02;			
+				currentOnNmos[0]  = 862;
 				currentOnNmos[10] = 824;
 				currentOnNmos[20] = 787;
 				currentOnNmos[30] = 751;
@@ -868,7 +1290,7 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnNmos[80] = 597;
 				currentOnNmos[90] = 571;
 				currentOnNmos[100] =546;
-				currentOnPmos[0]  = currentOnNmos[0];  
+				currentOnPmos[0]  = 775;  
 				currentOnPmos[10] = 725;
 				currentOnPmos[20] = 678;
 				currentOnPmos[30] = 636;
@@ -879,7 +1301,31 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80] = 469;
 				currentOnPmos[90] = 443;
 				currentOnPmos[100] =419;
-				currentOffNmos[0]  = currentlist_off[1];
+				
+				currentOnNmosTop[0]   = 0.829e3; 
+				currentOnNmosTop[10]  = 0.792e3; 
+				currentOnNmosTop[20]  = 0.757e3; 
+				currentOnNmosTop[30]  = 0.722e3; 
+				currentOnNmosTop[40]  = 0.689e3; 
+				currentOnNmosTop[50]  = 0.658e3; 
+				currentOnNmosTop[60]  = 0.629e3; 
+				currentOnNmosTop[70]  = 0.600e3; 
+				currentOnNmosTop[80]  = 0.574e3; 
+				currentOnNmosTop[90]  = 0.549e3; 
+				currentOnNmosTop[100] = 0.525e3; 
+				currentOnPmosTop[0]   = 0.745e3; 
+				currentOnPmosTop[10]  = 0.697e3; 
+				currentOnPmosTop[20]  = 0.652e3; 
+				currentOnPmosTop[30]  = 0.611e3; 
+				currentOnPmosTop[40]  = 0.574e3; 
+				currentOnPmosTop[50]  = 0.539e3; 
+				currentOnPmosTop[60]  = 0.507e3; 
+				currentOnPmosTop[70]  = 0.478e3; 
+				currentOnPmosTop[80]  = 0.451e3; 
+				currentOnPmosTop[90]  = 0.426e3; 
+				currentOnPmosTop[100] = 0.402e3;
+				
+				currentOffNmos[0]  = 99.6973e-6;
 				currentOffNmos[10] = 184.4892e-6;
 				currentOffNmos[20] = 329.1615e-6;
 				currentOffNmos[30] = 568.0731e-6;
@@ -905,353 +1351,101 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 			}
 		} else if (featureSizeInNano == 7) {
 			if (deviceRoadmap == HP) {
-
-				// 1.4 update
-				cout<<"HP for 14 nm and beyond is not supported"<<endl;
-				exit(-1);
-
-			} else {
-
-				// 1.4 update: based on IRDS 2017
+				/* PTM model: 7nfet_HP.pm,7pfet_HP.pm, from http://ptm.asu.edu/ */
 				vdd = 0.7;
-				vth = vth_list[2];
-				heightFin = 5.0e-8;
-				widthFin = 7e-9;
+				vth = 192.2339e-3;
+				heightFin = 5.2e-8;
+				widthFin = 6e-9;
 				PitchFin = 3.0e-8;			
-
-				// 1.4 update
-				max_fin_num = 2;
-				effective_width=107e-9;	
-
-				phyGateLength = 2.2e-8;
-				capIdealGate = caplist[2] * 1E-18 / (effective_width);//8.49489e-10;
-				cap_draintotal = cap_draintotallist[2]/ (effective_width);
-				capFringe = 0;
-				effectiveResistanceMultiplier = eff_res_mul[2];	/* from CACTI */
-				current_gmNmos= gm[2];
-				current_gmPmos= gm[2];
-				gm_oncurrent = gm[2];  // gm at on current
-
-
-				currentOnNmos[0]  = currentlist[2];
-				currentOnNmos[10] = 786; 
-				currentOnNmos[20] = 750; 
-				currentOnNmos[30] = 716; 
-				currentOnNmos[40] = 684; 
-				currentOnNmos[50] = 653; 
-				currentOnNmos[60] = 624; 
-				currentOnNmos[70] = 595; 
-				currentOnNmos[80] = 569; 
-				currentOnNmos[90] = 545;
-				currentOnNmos[100]= 521; 
-				currentOnPmos[0]  = currentOnNmos[0];  
-				currentOnPmos[10] = 689;
-				currentOnPmos[20] = 645;
-				currentOnPmos[30] = 605;
-				currentOnPmos[40] = 567;
-				currentOnPmos[50] = 533;
-				currentOnPmos[60] = 501;
-				currentOnPmos[70] = 473;
-				currentOnPmos[80] = 446;
-				currentOnPmos[90] = 421;
-				currentOnPmos[100] =398;
-				currentOffNmos[0]  = currentlist_off[2];
-				currentOffNmos[10] = 1.85E-04;
-				currentOffNmos[20] = 3.32E-04;
-				currentOffNmos[30] = 5.74E-04;
-				currentOffNmos[40] = 9.62E-04;
-				currentOffNmos[50] = 1.5695e-3;
-				currentOffNmos[60] = 2.4953e-3;
-				currentOffNmos[70] = 3.8744e-3 ;
-				currentOffNmos[80] = 5.8858e-3 ;
-				currentOffNmos[90] = 8.7624e-3;
-				currentOffNmos[100] =1.28025e-2;
-				currentOffPmos[0]  = 100.9536e-6;
-				currentOffPmos[10] = 201.3937e-6;
-				currentOffPmos[20] = 386.2086e-6;
-				currentOffPmos[30] = 714.4288e-6;
-				currentOffPmos[40] = 1.2788e-3;
-				currentOffPmos[50] = 2.2207e-3;
-				currentOffPmos[60] = 3.7509e-3;
-				currentOffPmos[70] = 6.1750e-3;
-				currentOffPmos[80] = 9.9278e-3;
-				currentOffPmos[90] = 1.56146e-2;
-				currentOffPmos[100] =2.40633e-2;
-				pnSizeRatio = (int)(currentOnNmos[0]/currentOnPmos[0]);
-			}
-		} 
-
-		// 1.4 update: technology extension beyond 7 nm 
-
-		/* Technology update beyond 7 nm */ 
-		else if (featureSizeInNano == 5) {
-			if (deviceRoadmap == HP) {
-
-				// 1.4 update
-				cout<<"HP for 14 nm and beyond is not supported"<<endl;
-				exit(-1);
-
-			} else {
-
-				// 1.4 update: IRDS 2021
-				vdd = 0.7;
-				vth = vth_list[3];
-
-				widthFin=6.0e-9; 
-				PitchFin=28.0e-9;	
-				phyGateLength = 2.0e-8;
-
-				// 1.4 update: height is not needed as long as effective width is specified
-				effective_width = 106.0*1e-9;	
-				max_fin_num =2;		
-
-				capIdealGate = caplist[3] * 1E-18 / (effective_width );
-				cap_draintotal = cap_draintotallist[3]/ (effective_width);
-				capFringe = 0;
-
-				effectiveResistanceMultiplier = eff_res_mul[3];	/* from CACTI */
-				current_gmNmos= gm[3];
-				current_gmPmos= gm[3];
-				gm_oncurrent = gm[3];  // gm at on current
-
-
-				currentOnNmos[0]  = currentlist[3];
-				currentOnNmos[10] = 786; 
-				currentOnNmos[20] = 750; 
-				currentOnNmos[30] = 716; 
-				currentOnNmos[40] = 684; 
-				currentOnNmos[50] = 653; 
-				currentOnNmos[60] = 624; 
-				currentOnNmos[70] = 595; 
-				currentOnNmos[80] = 569; 
-				currentOnNmos[90] = 545;
-				currentOnNmos[100]= 521; 
-				currentOnPmos[0]  = currentOnNmos[0]; 
-				currentOnPmos[10] = 689;
-				currentOnPmos[20] = 645;
-				currentOnPmos[30] = 605;
-				currentOnPmos[40] = 567;
-				currentOnPmos[50] = 533;
-				currentOnPmos[60] = 501;
-				currentOnPmos[70] = 473;
-				currentOnPmos[80] = 446;
-				currentOnPmos[90] = 421;
-				currentOnPmos[100] =398;
-				currentOffNmos[0]  = currentlist_off[3];
-				currentOffNmos[10] = 1.85E-04;
-				currentOffNmos[20] = 3.32E-04;
-				currentOffNmos[30] = 5.74E-04;
-				currentOffNmos[40] = 9.62E-04;
-				currentOffNmos[50] = 1.5695e-3;
-				currentOffNmos[60] = 2.4953e-3;
-				currentOffNmos[70] = 3.8744e-3 ;
-				currentOffNmos[80] = 5.8858e-3 ;
-				currentOffNmos[90] = 8.7624e-3;
-				currentOffNmos[100] =1.28025e-2;
-				currentOffPmos[0]  = 100.9536e-6;
-				currentOffPmos[10] = 201.3937e-6;
-				currentOffPmos[20] = 386.2086e-6;
-				currentOffPmos[30] = 714.4288e-6;
-				currentOffPmos[40] = 1.2788e-3;
-				currentOffPmos[50] = 2.2207e-3;
-				currentOffPmos[60] = 3.7509e-3;
-				currentOffPmos[70] = 6.1750e-3;
-				currentOffPmos[80] = 9.9278e-3;
-				currentOffPmos[90] = 1.56146e-2;
-				currentOffPmos[100] =2.40633e-2;
-				pnSizeRatio = (int)(currentOnNmos[0]/currentOnPmos[0]);
-			}
-		} else if (featureSizeInNano == 3) {
-			if (deviceRoadmap == HP) {
-
-				// 1.4 update
-				cout<<"HP for 14 nm and beyond is not supported"<<endl;
-				exit(-1);
-
-			} else {
-
-				// 1.4 update: IRDS 2022
-				vdd = 0.7;
-				vth = vth_list[4];
-				widthFin=5.0e-9;  	
-				PitchFin=24.0e-9;	
 				phyGateLength = 1.8e-8;
-
-				// 1.4 update: height is not needed as long as effective width is specified
-				effective_width = 101.0*1e-9;
-				max_fin_num =2;	
+				capIdealGate = 1.0487e-9;
+				capFringe = 0;
+				effectiveResistanceMultiplier = 1.45;	/* from CACTI */
+				current_gmNmos=1.91E+03;
+				current_gmPmos=8.02E+02;			
+				currentOnNmos[0]   = 1912 ;
+				currentOnNmos[10]  = 1874;
+				currentOnNmos[20]  = 1823;
+				currentOnNmos[30]  = 1772;
+				currentOnNmos[40]  = 1721;
+				currentOnNmos[50]  = 1670;
+				currentOnNmos[60]  = 1632;
+				currentOnNmos[70]  = 1581;
+				currentOnNmos[80]  = 1530;
+				currentOnNmos[90]  = 1491;
+				currentOnNmos[100] = 1440;
+				currentOnPmos[0]   = 1685; 
+				currentOnPmos[10]  = 1596; 
+				currentOnPmos[20]  = 1519; 
+				currentOnPmos[30]  = 1442; 
+				currentOnPmos[40]  = 1366; 
+				currentOnPmos[50]  = 1302; 
+				currentOnPmos[60]  = 1238; 
+				currentOnPmos[70]  = 1174; 
+				currentOnPmos[80]  = 1123; 
+				currentOnPmos[90]  = 1072; 
+				currentOnPmos[100] = 1021;
 				
-				capIdealGate = caplist[4] * 1E-18 / (effective_width);   //6.44E-10; //8.91E-10;
-				cap_draintotal = cap_draintotallist[4]/ (effective_width);
-				capFringe = 0;
-
-				effectiveResistanceMultiplier = eff_res_mul[4];	/* from CACTI */
-				current_gmNmos= gm[4];
-				current_gmPmos= gm[4];	
-				gm_oncurrent = gm[4];  // gm at on current
-
-				currentOnNmos[0]  = currentlist[4];
-				currentOnNmos[10] = 786; 
-				currentOnNmos[20] = 750; 
-				currentOnNmos[30] = 716; 
-				currentOnNmos[40] = 684; 
-				currentOnNmos[50] = 653; 
-				currentOnNmos[60] = 624; 
-				currentOnNmos[70] = 595; 
-				currentOnNmos[80] = 569; 
-				currentOnNmos[90] = 545;
-				currentOnNmos[100]= 521; 
-				currentOnPmos[0]  = currentOnNmos[0]; 
-				currentOnPmos[10] = 689;
-				currentOnPmos[20] = 645;
-				currentOnPmos[30] = 605;
-				currentOnPmos[40] = 567;
-				currentOnPmos[50] = 533;
-				currentOnPmos[60] = 501;
-				currentOnPmos[70] = 473;
-				currentOnPmos[80] = 446;
-				currentOnPmos[90] = 421;
-				currentOnPmos[100] =398;
-				currentOffNmos[0]  = currentlist_off[4];
-				currentOffNmos[10] = 1.85E-04;
-				currentOffNmos[20] = 3.32E-04;
-				currentOffNmos[30] = 5.74E-04;
-				currentOffNmos[40] = 9.62E-04;
-				currentOffNmos[50] = 1.5695e-3;
-				currentOffNmos[60] = 2.4953e-3;
-				currentOffNmos[70] = 3.8744e-3 ;
-				currentOffNmos[80] = 5.8858e-3 ;
-				currentOffNmos[90] = 8.7624e-3;
-				currentOffNmos[100] =1.28025e-2;
-				currentOffPmos[0]  = 100.9536e-6;
-				currentOffPmos[10] = 201.3937e-6;
-				currentOffPmos[20] = 386.2086e-6;
-				currentOffPmos[30] = 714.4288e-6;
-				currentOffPmos[40] = 1.2788e-3;
-				currentOffPmos[50] = 2.2207e-3;
-				currentOffPmos[60] = 3.7509e-3;
-				currentOffPmos[70] = 6.1750e-3;
-				currentOffPmos[80] = 9.9278e-3;
-				currentOffPmos[90] = 1.56146e-2;
-				currentOffPmos[100] =2.40633e-2;
+				currentOnNmosTop[0]   = 1.862e3; 
+				currentOnNmosTop[10]  = 1.825e3; 
+				currentOnNmosTop[20]  = 1.775e3; 
+				currentOnNmosTop[30]  = 1.725e3; 
+				currentOnNmosTop[40]  = 1.676e3; 
+				currentOnNmosTop[50]  = 1.626e3; 
+				currentOnNmosTop[60]  = 1.589e3; 
+				currentOnNmosTop[70]  = 1.539e3; 
+				currentOnNmosTop[80]  = 1.490e3; 
+				currentOnNmosTop[90]  = 1.452e3; 
+				currentOnNmosTop[100] = 1.403e3; 
+				currentOnPmosTop[0]   = 1.560e3; 
+				currentOnPmosTop[10]  = 1.477e3; 
+				currentOnPmosTop[20]  = 1.406e3; 
+				currentOnPmosTop[30]  = 1.335e3; 
+				currentOnPmosTop[40]  = 1.265e3; 
+				currentOnPmosTop[50]  = 1.205e3; 
+				currentOnPmosTop[60]  = 1.146e3; 
+				currentOnPmosTop[70]  = 1.087e3; 
+				currentOnPmosTop[80]  = 1.040e3; 
+				currentOnPmosTop[90]  = 0.993e3; 
+				currentOnPmosTop[100] = 0.945e3; 
+				
+				currentOffNmos[0]  = 100.2258e-3;
+				currentOffNmos[10] = 149.0252e-3;
+				currentOffNmos[20] = 216.5654e-3;
+				currentOffNmos[30] = 308.1967e-3;
+				currentOffNmos[40] = 430.2635e-3;
+				currentOffNmos[50] = 590.1731e-3;
+				currentOffNmos[60] = 796.4489e-3;
+				currentOffNmos[70] = 1.0588;
+				currentOffNmos[80] = 1.3880;
+				currentOffNmos[90] = 1.7960;
+				currentOffNmos[100]= 2.2961;
+				currentOffPmos[0]  = 97.9484e-3  ;
+				currentOffPmos[10] = 156.3424e-3 ;
+				currentOffPmos[20] = 243.1919e-3;
+				currentOffPmos[30] = 369.4499e-3 ;
+				currentOffPmos[40] = 549.1886e-3 ;
+				currentOffPmos[50] = 800.1479e-3;
+				currentOffPmos[60] = 1.1443      ;
+				currentOffPmos[70] = 1.6083      ;
+				currentOffPmos[80] = 2.2242      ;
+				currentOffPmos[90] = 3.0295      ;
+				currentOffPmos[100]= 4.0674      ;
 				pnSizeRatio = (int)(currentOnNmos[0]/currentOnPmos[0]);
-			}
-		} 
-		else if (featureSizeInNano == 2) {
-			if (deviceRoadmap == HP) {
-
-				// 1.4 update
-				cout<<"HP for 14 nm and beyond is not supported"<<endl;
-				exit(-1);
-
-			} else { // 2 nm
-
-				// 1.4 update: IRDS 2022
-				vdd = 0.65;
-				vth = vth_list[5];
-				PitchFin= 26e-9;
-				phyGateLength = 1.4e-8;
-
-				// 1.4 update: GAA-specific parameters
-				max_fin_per_GAA=1;
-				max_sheet_num=3;
-				thickness_sheet=6*1e-9;
-				width_sheet=15*1e-9;	
-
-				widthFin=width_sheet; // for drain height calculation 	
-				effective_width=(thickness_sheet+width_sheet)*2;
-
-				capIdealGate = caplist[5] * 1E-18 /  (effective_width*max_sheet_num) ; 
-				cap_draintotal = cap_draintotallist[5]/ (effective_width);
-				capFringe = 0;
-
-				effectiveResistanceMultiplier = eff_res_mul[5];	/* from CACTI */
-				current_gmNmos= gm[5];
-				current_gmPmos= gm[5];	
-				gm_oncurrent = gm[5];  // gm at on current
-
-
-				currentOnNmos[0]  = currentlist[5];
-				currentOnNmos[10] = 786; 
-				currentOnNmos[20] = 750; 
-				currentOnNmos[30] = 716; 
-				currentOnNmos[40] = 684; 
-				currentOnNmos[50] = 653; 
-				currentOnNmos[60] = 624; 
-				currentOnNmos[70] = 595; 
-				currentOnNmos[80] = 569; 
-				currentOnNmos[90] = 545;
-				currentOnNmos[100]= 521; 
-				currentOnPmos[0]  = currentOnNmos[0]; 
-				currentOnPmos[10] = 689;
-				currentOnPmos[20] = 645;
-				currentOnPmos[30] = 605;
-				currentOnPmos[40] = 567;
-				currentOnPmos[50] = 533;
-				currentOnPmos[60] = 501;
-				currentOnPmos[70] = 473;
-				currentOnPmos[80] = 446;
-				currentOnPmos[90] = 421;
-				currentOnPmos[100] =398;
-				currentOffNmos[0]  = currentlist_off[5];
-				currentOffNmos[10] = 1.85E-04;
-				currentOffNmos[20] = 3.32E-04;
-				currentOffNmos[30] = 5.74E-04;
-				currentOffNmos[40] = 9.62E-04;
-				currentOffNmos[50] = 1.5695e-3;
-				currentOffNmos[60] = 2.4953e-3;
-				currentOffNmos[70] = 3.8744e-3 ;
-				currentOffNmos[80] = 5.8858e-3 ;
-				currentOffNmos[90] = 8.7624e-3;
-				currentOffNmos[100] =1.28025e-2;
-				currentOffPmos[0]  = 100.9536e-6;
-				currentOffPmos[10] = 201.3937e-6;
-				currentOffPmos[20] = 386.2086e-6;
-				currentOffPmos[30] = 714.4288e-6;
-				currentOffPmos[40] = 1.2788e-3;
-				currentOffPmos[50] = 2.2207e-3;
-				currentOffPmos[60] = 3.7509e-3;
-				currentOffPmos[70] = 6.1750e-3;
-				currentOffPmos[80] = 9.9278e-3;
-				currentOffPmos[90] = 1.56146e-2;
-				currentOffPmos[100] =2.40633e-2;
-				pnSizeRatio = (int)(currentOnNmos[0]/currentOnPmos[0]);
-			}
-		} 		
-		else if (featureSizeInNano == 1) {
-			if (deviceRoadmap == HP) {
-
-				// 1.4 update
-				cout<<"HP for 14 nm and beyond is not supported"<<endl;
-				exit(-1);
-
 			} else {
-
-				// 1.4 update: IRDS 2022
-				vdd = 0.6;
-				vth = vth_list[6];
-				PitchFin= 24e-9;
-				phyGateLength = 1.2e-8;
-
-				// 1.4 update: IRDS 2022 - GAA specfic parameters
-				max_fin_per_GAA=1;
-				max_sheet_num=4;
-				thickness_sheet=6*1e-9;
-				width_sheet=10*1e-9;	
-					
-				widthFin= width_sheet; // for drain height calculation 
-				effective_width=(thickness_sheet+width_sheet)*2;
-				
-				capIdealGate = caplist[6] * 1E-18 /  (effective_width*max_sheet_num) ;
-				cap_draintotal = cap_draintotallist[6]/ (effective_width);
+				/* PTM model: 7nfet_LP.pm,7pfet_LP.pm, from http://ptm.asu.edu/ */
+				vdd = 0.7;
+				vth = 402.5252e-3;
+				heightFin = 5.2e-8;
+				widthFin = 6e-9;
+				PitchFin = 3.0e-8;			
+				phyGateLength = 1.8e-8;
+				capIdealGate = 8.49489e-10;
 				capFringe = 0;
-
-				effectiveResistanceMultiplier = eff_res_mul[6];	/* from CACTI */
-				current_gmNmos= gm[6];
-				current_gmPmos= gm[6];	
-				gm_oncurrent = gm[6];  // gm at on current	
-
-				currentOnNmos[0]  = currentlist[6];
+				effectiveResistanceMultiplier = 1.73;	/* from CACTI */
+				current_gmNmos=8.22E+02;
+				current_gmPmos=1.45E+02;			
+				currentOnNmos[0]  = 822;
 				currentOnNmos[10] = 786; 
 				currentOnNmos[20] = 750; 
 				currentOnNmos[30] = 716; 
@@ -1262,7 +1456,7 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnNmos[80] = 569; 
 				currentOnNmos[90] = 545;
 				currentOnNmos[100]= 521; 
-				currentOnPmos[0]  = currentOnNmos[0]; 
+				currentOnPmos[0]  = 737;
 				currentOnPmos[10] = 689;
 				currentOnPmos[20] = 645;
 				currentOnPmos[30] = 605;
@@ -1273,7 +1467,31 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOnPmos[80] = 446;
 				currentOnPmos[90] = 421;
 				currentOnPmos[100] =398;
-				currentOffNmos[0]  = currentlist_off[6];
+				
+				currentOnNmosTop[0]   = 0.759e3; 
+				currentOnNmosTop[10]  = 0.725e3; 
+				currentOnNmosTop[20]  = 0.693e3; 
+				currentOnNmosTop[30]  = 0.661e3; 
+				currentOnNmosTop[40]  = 0.631e3; 
+				currentOnNmosTop[50]  = 0.602e3; 
+				currentOnNmosTop[60]  = 0.576e3; 
+				currentOnNmosTop[70]  = 0.550e3; 
+				currentOnNmosTop[80]  = 0.526e3; 
+				currentOnNmosTop[90]  = 0.503e3; 
+				currentOnNmosTop[100] = 0.481e3; 
+				currentOnPmosTop[0]   = 0.680e3; 
+				currentOnPmosTop[10]  = 0.636e3; 
+				currentOnPmosTop[20]  = 0.596e3; 
+				currentOnPmosTop[30]  = 0.558e3; 
+				currentOnPmosTop[40]  = 0.524e3; 
+				currentOnPmosTop[50]  = 0.429e3; 
+				currentOnPmosTop[60]  = 0.463e3; 
+				currentOnPmosTop[70]  = 0.437e3; 
+				currentOnPmosTop[80]  = 0.412e3; 
+				currentOnPmosTop[90]  = 0.389e3; 
+				currentOnPmosTop[100] = 0.367e3;
+				
+				currentOffNmos[0]  = 1.00E-04;
 				currentOffNmos[10] = 1.85E-04;
 				currentOffNmos[20] = 3.32E-04;
 				currentOffNmos[30] = 5.74E-04;
@@ -1297,9 +1515,7 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 				currentOffPmos[100] =2.40633e-2;
 				pnSizeRatio = (int)(currentOnNmos[0]/currentOnPmos[0]);
 			}
-		}
-
-		else {
+		} else {
 			cout<<"Error: CMOS Technology node "<< featureSizeInNano <<"nm is not supported"<<endl;
 	        exit(-1);
 		}
@@ -1677,17 +1893,6 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 	capSidewall = cjswd / pow(1 + vdd / buildInPotential, mjswd);
 	capDrainToChannel = cjswgd / pow(1 + vdd / buildInPotential, mjswgd);
 
-	// 1.4 update: junction capacitance for 14 nm and beyond; 
-
-	if (featureSizeInNano == 14 ) capJunction= 0.0120;
-	else if (featureSizeInNano == 10 ) capJunction= 0.0134;
-	else if (featureSizeInNano== 7 ) capJunction= 0.0137;
-	else if (featureSizeInNano == 5 ) capJunction= 0.0119;
-	else if (featureSizeInNano == 3 ) capJunction= 0.0128;
-	else if (featureSizeInNano == 2 ) capJunction= 0.0091;
-	else if (featureSizeInNano == 1 ) capJunction= 0.0102;
-	else capJunction = cjd / pow(1 + vdd / buildInPotential, mjd);
-
 	/* Properties not used so far */
 	capPolywire = 0.0;	/* TO-DO: we need to find the values */
 
@@ -1705,6 +1910,22 @@ void Technology::Initialize(int _featureSizeInNano, DeviceRoadmap _deviceRoadmap
 			double a = currentOnPmos[i / 10 * 10];
 			double b = currentOnPmos[i / 10 * 10 + 10];
 			currentOnPmos[i] = a + (b-a) * (i % 10) / 10;
+		}
+	}
+	
+	for (int i = 1; i < 100; i++) {
+		if (i % 10) {
+			double a = currentOnNmosTop[i / 10 * 10];
+			double b = currentOnNmosTop[i / 10 * 10 + 10];
+			currentOnNmosTop[i] = a + (b-a) * (i % 10) / 10;
+		}
+	}
+
+	for (int i = 1; i < 100; i++) {
+		if (i % 10) {
+			double a = currentOnPmosTop[i / 10 * 10];
+			double b = currentOnPmosTop[i / 10 * 10 + 10];
+			currentOnPmosTop[i] = a + (b-a) * (i % 10) / 10;
 		}
 	}
 

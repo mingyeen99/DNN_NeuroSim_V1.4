@@ -60,9 +60,9 @@ void DeMux::Initialize(int _numInput, int numRow){
 
 	// TG
 	resTg = cell.resistanceOn / numRow * IR_DROP_TOLERANCE;
-	widthTgN = CalculateOnResistance(tech.featureSize, NMOS, inputParameter.temperature, tech)
+	widthTgN = CalculateOnResistance(tech.featureSize, NMOS, 300, tech, 0)
 							* tech.featureSize / (resTg*2);
-	widthTgP = CalculateOnResistance(tech.featureSize, PMOS, inputParameter.temperature, tech)
+	widthTgP = CalculateOnResistance(tech.featureSize, PMOS, 300, tech, 0)
 							* tech.featureSize / (resTg*2);
 
 	initialized = true;
@@ -86,25 +86,6 @@ void DeMux::CalculateArea(double _newHeight, double _newWidth, AreaModify _optio
 		if (_newWidth && _option==NONE) {
 			numRowTgPair = 1;
 			double minCellWidth = 2 * (POLY_WIDTH + MIN_GAP_BET_GATE_POLY) * tech.featureSize; // min standard cell width
-			
-			// 1.4 update: new cell dimension
-			if (tech.featureSize == 14 * 1e-9)
-			minCellWidth  *= ( (double)CPP_14nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-			else if (tech.featureSize == 10 * 1e-9)
-			minCellWidth  *= ( (double)CPP_10nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-			else if (tech.featureSize == 7 * 1e-9)
-			minCellWidth  *= ( (double)CPP_7nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-			else if (tech.featureSize == 5 * 1e-9)
-			minCellWidth  *= ( (double)CPP_5nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-			else if (tech.featureSize == 3 * 1e-9)
-			minCellWidth  *= ( (double)CPP_3nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-			else if (tech.featureSize == 2 * 1e-9)
-			minCellWidth  *= ( (double)CPP_2nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-			else if (tech.featureSize == 1 * 1e-9)
-			minCellWidth  *= ( (double)CPP_1nm/(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-			else
-			minCellWidth  *= 1;			
-			
 			if (minCellWidth > _newWidth) {
 				cout << "[DeMux] Error: pass gate width is even larger than the array width" << endl;
 			}
@@ -162,8 +143,6 @@ void DeMux::CalculateLatency(double _rampInput, double numRead) {	// rampInput a
 		rampInput = _rampInput;
 		double tr;  /* time constant */
 		readLatency = 0;
-		
-		// 1.4 update: needs check capTgDrain?
 		
 		tr = resTg * capTgDrain;
 		readLatency += 2.3 * tr;

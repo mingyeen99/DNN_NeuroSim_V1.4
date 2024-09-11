@@ -57,7 +57,7 @@ public:
 	void PrintProperty(const char* str);
 	void Initialize(int _numRow, int _numCol, double _delaytolerance, double _busWidth, double _clkFreq);
 	void CalculateArea(double unitHeight, double unitWidth, double foldedratio);
-	void CalculateLatency(int x_init, int y_init, int x_end, int y_end, double unitHeight, double unitWidth, double numRead);
+	void CalculateLatency(int x_init, int y_init, int x_end, int y_end, double unitHeight, double unitWidth, double numRead, int M3D);
 	void CalculatePower(int x_init, int y_init, int x_end, int y_end, double unitHeight, double unitWidth, double numBitAccess, double numRead);
 	double GetUnitLengthRes(double wireLength);
 
@@ -74,10 +74,6 @@ public:
 	double find_stage;
 	int x_center, y_center, hit, skipVer;
 	double clkFreq;
-
-	// 230920 update
-
-	double critical_latency;
 };
 
 #endif /* HTREE_H_ */

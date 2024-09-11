@@ -81,7 +81,7 @@ public:
 	void PrintProperty();
 	void Initialize(int _numRow, int _numCol, double _unitWireRes);
 	void CalculateArea();
-	void CalculateLatency(double _rampInput, const vector<double> &columnResistance, bool CalculateclkFreq);
+	void CalculateLatency(double _rampInput, const vector<double> &columnResistance, bool CalculateclkFreq, const vector<int> &partition3D);
 	void CalculatePower(const vector<double> &columnResistance);
 
 	/* Properties */	
@@ -162,14 +162,6 @@ public:
 	
 	bool trainingEstimation, parallelTrans;
 	int levelOutputTrans, numRowMuxedTrans, numReadPulseTrans;
-	
-	// 1.4 update : parameters for buffer insertion
-	double widthInvN, widthInvP;
-	double wInv, hInv, drivecapin, drivecapout, sectionres, targetdriveres;
-	
-	// Anni update
-	int numRowParallel, numAdd; 
-	double leakageSRAMInUse;
 
 	/* Circuit Modules */
 	LevelShifter			 wllevelshifter;

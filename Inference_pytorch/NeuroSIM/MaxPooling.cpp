@@ -161,7 +161,7 @@ void MaxPooling::CalculateArea(double widthArray){
 }
 
 
-void MaxPooling::CalculateLatency(double _rampInput, double _capLoad, double numRead){
+void MaxPooling::CalculateLatency(double _rampInput, double _capLoad, double numRead, int M3D){
 	if (!initialized) {
 		cout << "[MaxPooling] Error: Require initialization first!" << endl;
 	} else {
@@ -174,24 +174,24 @@ void MaxPooling::CalculateLatency(double _rampInput, double _capLoad, double num
 		double resNOR, resINV, resTG;
 		double rampNOROutput, rampINVOutput, rampTGOutput;
 
-		comparator.CalculateLatency(rampInput, capInvOutput*2, 1);    // 1-bit comparator read latency
+		comparator.CalculateLatency(rampInput, capInvOutput*2, 1, M3D);    // 1-bit comparator read latency
 		readLatency += comparator.readLatency * numBit/2;    // assume the comparator will go to the half way and stop
 		
 		// Gout pass NOR2, INV and TG
 		// NOR2
-		resNOR = CalculateOnResistance(widthNorN2, NMOS, inputParameter.temperature, tech) * 2;
+		resNOR = CalculateOnResistance(widthNorN2, NMOS, inputParameter.temperature, tech, M3D) * 2;
 		tr = resNOR * (capInvInput*2 + numBit*capInvOutput);
 		gm = CalculateTransconductance(widthNorN2, NMOS, tech);
 		beta = 1 / (resNOR * gm);
 		readLatency += horowitz(tr, beta, 1e20, &rampNOROutput);
 		// INV
-		resINV = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech) * 2;
+		resINV = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech, M3D) * 2;
 		tr = resINV * (capInvInput + capNor2Output);
 		gm = CalculateTransconductance(widthInvN, NMOS, tech);
 		beta = 1 / (resINV * gm);
 		readLatency += horowitz(tr, beta, 1e20, &rampINVOutput);
 		// TG
-		resTG = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech) * 2;
+		resTG = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech, M3D) * 2;
 		tr = resTG * (capInvInput*2 + capLoad);
 		gm = CalculateTransconductance(widthInvN, NMOS, tech);
 		beta = 1 / (resTG * gm);

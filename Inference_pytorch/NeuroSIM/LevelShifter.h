@@ -58,7 +58,7 @@ public:
 	void PrintProperty(const char* str);
 	void Initialize(int _numOutput, double _activityRowRead, double _clkFreq);
 	void CalculateArea(double _newHeight, double _newWidth, AreaModify _option);
-	void CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numRead, double numWrite);
+	void CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numRead, double numWrite, int M3D);
 	void CalculatePower(double numRead, double numWrite, double activeRowRead);
 	//Mux & operator=(const Mux &);
 	void UnInitialize();

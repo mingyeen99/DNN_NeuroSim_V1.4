@@ -47,12 +47,6 @@
 #include "formula.h"
 #include "NewSwitchMatrix.h"
 
-// 1.4 update : include Param.h
-#include "Param.h" 
-
-// 1.4 update : include Param.h
-extern Param *param;
-
 using namespace std;
 
 NewSwitchMatrix::NewSwitchMatrix(const InputParameter& _inputParameter, const Technology& _tech, const MemCell& _cell): inputParameter(_inputParameter), tech(_tech), cell(_cell), dff(_inputParameter, _tech, _cell), FunctionUnit() {
@@ -74,13 +68,10 @@ void NewSwitchMatrix::Initialize(int _numOutput, double _activityRowRead, double
     
 	// DFF
 	dff.Initialize(numOutput, clkFreq); 
-	// 1.4 update: allow width tuning
-	widthTgN = MIN_NMOS_SIZE * tech.featureSize * param->newswitchmatrixsizeratio;
-	widthTgP = tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize* param->newswitchmatrixsizeratio;
-	// EnlargeSize(&widthTgN, &widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech);
-
-	// 1.4 update
-	resTg = 1/(1/CalculateOnResistance_normal(widthTgN, NMOS, inputParameter.temperature, tech) + 1/CalculateOnResistance_normal(widthTgP, NMOS, inputParameter.temperature, tech));
+	widthTgN = MIN_NMOS_SIZE * tech.featureSize;
+	widthTgP = tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize;
+	EnlargeSize(&widthTgN, &widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech);
+	resTg = CalculateOnResistance(widthTgN, NMOS, 300, tech, 0) * LINEAR_REGION_RATIO;
 	
 	initialized = true;
 }
@@ -94,27 +85,6 @@ void NewSwitchMatrix::CalculateArea(double _newHeight, double _newWidth, AreaMod
 		height = 0;
 		width = 0;
 		double minCellHeight = MAX_TRANSISTOR_HEIGHT * tech.featureSize;   // min standard cell height for 1 Tg 
-		
-
-		// 1.4 update : new cell dimension
-		if (tech.featureSize == 14 * 1e-9)
-		minCellHeight *=  ( (double)MAX_TRANSISTOR_HEIGHT_14nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 10 * 1e-9)
-		minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_10nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 7 * 1e-9)
-		minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_7nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 5 * 1e-9)
-		minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_5nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 3 * 1e-9)
-		minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_3nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 2 * 1e-9)
-		minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_2nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 1 * 1e-9)
-		minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_1nm /MAX_TRANSISTOR_HEIGHT);
-		else
-		minCellHeight *= 1;		
-		
-		
 		if (_newHeight && _option==NONE) {
 			if (_newHeight < minCellHeight) {
 				cout << "[NewSwitchMatrix] Error: pass gate height is even larger than the array height" << endl;
@@ -174,11 +144,7 @@ void NewSwitchMatrix::CalculateLatency(double _rampInput, double _capLoad, doubl
 		dff.CalculateLatency(1e20, numRead);
 
 		// TG
-		// 1.4 update: needs check, outputcap ( + capTgGateN*0.5 + capTgGateP*0.5 )
-		capOutput = capTgDrain * 2 + capTgGateN*0.5 + capTgGateP*0.5;         
-
-		// 1.4 update: needs check, resTg coefficients
-		
+		capOutput = capTgDrain * 5;         // pass 2 TG, 5 loading drain capacitance
 		tr = resTg * (capOutput + capLoad) + resLoad * capLoad / 2;     // elmore delay model
 		readLatency += horowitz(tr, 0, rampInput, &rampOutput);	// get from chargeLatency in the original SubArray.cpp
 		
@@ -208,8 +174,7 @@ void NewSwitchMatrix::CalculatePower(double numRead, double numWrite, double act
 
 		// Read dynamic energy
 		readDynamicEnergy += (capTgDrain * 2) * cell.accessVoltage * cell.accessVoltage * numOutput * activityRowRead;   // 1 TG pass Vaccess to CMOS gate to select the row
-		// 1.4 update 
-		readDynamicEnergy += (capTgDrain * 3) * cell.readVoltage * cell.readVoltage * numOutput * activityRowRead;    // 2 TG pass Vread to BL
+		readDynamicEnergy += (capTgDrain * 5) * cell.readVoltage * cell.readVoltage * numOutput * activityRowRead;    // 2 TG pass Vread to BL, total loading is 5 Tg Drain capacitance
 		readDynamicEnergy += (capTgGateN + capTgGateP) * 3 * tech.vdd * tech.vdd * numOutput * activityRowRead;    // open 3 TG when selected
 
 		readDynamicEnergy *= numRead;

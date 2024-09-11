@@ -63,9 +63,8 @@ void DFF::Initialize(int _numDff, double _clkFreq){
 	widthInvN = MIN_NMOS_SIZE * tech.featureSize;
 	widthInvP = tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize;
 
-	// 1.4 update : no enlarge for DFF
-	// EnlargeSize(&widthTgN, &widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech); 
-	// EnlargeSize(&widthInvN, &widthInvP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech);
+	EnlargeSize(&widthTgN, &widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech); 
+	EnlargeSize(&widthInvN, &widthInvP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech);
 	
 	initialized = true;
 }
@@ -128,32 +127,14 @@ void DFF::CalculateArea(double _newHeight, double _newWidth, AreaModify _option)
 			default:    // NONE
 				break;
 		}
-
-		// 1.4 update
-		if ((tech.featureSize == 2e-9) && param->speciallayout) { 
-			
-			CalculateGateCapacitance_GAA(INV, 1, MIN_NMOS_SIZE * tech.featureSize, MIN_NMOS_SIZE * tech.featureSize, hDffInv, tech, &capInvInput, &capInvOutput, 1.0/2.0,  4.5/15.0,  4.5/15.0); 
-			// TG
-			capTgGateN = CalculateGateCap(widthTgN, tech) * 1.0/2.0;
-			capTgGateP = CalculateGateCap(widthTgP, tech)* 1.0/2.0;
-			capTgDrain = capInvOutput;	  
-		}
-	    else if ((tech.featureSize == 1e-9) && param->speciallayout) {
-			CalculateGateCapacitance_GAA(INV, 1, MIN_NMOS_SIZE * tech.featureSize, MIN_NMOS_SIZE * tech.featureSize,hDffInv, tech, &capInvInput, &capInvOutput, 10.5/16.0,  4.5/10.0,  4.5/10.0); 
-			// TG
-			capTgGateN = CalculateGateCap(widthTgN, tech)* 10.5/16.0;
-			capTgGateP = CalculateGateCap(widthTgP, tech)* 10.5/16.0;
-			capTgDrain = capInvOutput;	  
-		}
 		
-		else {
+		// Capacitance
+		// INV
 		CalculateGateCapacitance(INV, 1, widthInvN, widthInvP, hDffInv, tech, &capInvInput, &capInvOutput);
 		// TG
 		capTgGateN = CalculateGateCap(widthTgN, tech);
 		capTgGateP = CalculateGateCap(widthTgP, tech);
 		CalculateGateCapacitance(INV, 1, widthTgN, widthTgP, hDffInv, tech, NULL, &capTgDrain);
-		}
-
 	}
 }
 
@@ -177,19 +158,7 @@ void DFF::CalculatePower(double numRead, double numDffPerOperation, bool validat
 	} else {
 		readDynamicEnergy = 0;
 		/* Leakage power */
-		// 1.4 update - updated 
-
-		if ((tech.featureSize == 2e-9) && param->speciallayout) { 
-			leakage = CalculateGateLeakage(INV, 1, widthInvN, widthInvP, inputParameter.temperature, tech) * tech.vdd * 8 * numDff * 1.0/2.0;
-
-		}
-	    else if ((tech.featureSize == 1e-9) && param->speciallayout) {
-			leakage = CalculateGateLeakage(INV, 1, widthInvN, widthInvP, inputParameter.temperature, tech) * tech.vdd * 8 * numDff * 10.5/16.0;
-		}
-		
-		else {
-			leakage = CalculateGateLeakage(INV, 1, widthInvN, widthInvP, inputParameter.temperature, tech) * tech.vdd * 8 * numDff;
-		}	
+		leakage = CalculateGateLeakage(INV, 1, widthInvN, widthInvP, inputParameter.temperature, tech) * tech.vdd * 8 * numDff;
 		
 		// Assume input D=1 and the energy of CLK INV and CLK TG are for 1 clock cycles
 		// CLK INV (all DFFs have energy consumption)
@@ -207,9 +176,6 @@ void DFF::CalculatePower(double numRead, double numDffPerOperation, bool validat
 		if(validated){
 			readDynamicEnergy *= param->gamma; 	// switching activity of DFF in shifter-add and accumulator, gamma = 0.5 by default
 		}
-
-		// 1.4 update : write energy is equal to read energy
-		writeDynamicEnergy = readDynamicEnergy;
 	}
 }
 

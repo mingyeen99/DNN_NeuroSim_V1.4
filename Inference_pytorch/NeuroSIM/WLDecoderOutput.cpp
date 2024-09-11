@@ -84,25 +84,6 @@ void WLDecoderOutput::CalculateArea(double _newHeight, double _newWidth, AreaMod
 	} else {
 		double hNor, wNor, hInv, wInv, hTg, wTg, hNmos, wNmos;
 		double minCellHeight = MAX_TRANSISTOR_HEIGHT * tech.featureSize;
-		
-		// 1.4 update : new cell dimension
-		if (tech.featureSize == 14 * 1e-9)
-		minCellHeight *= (MAX_TRANSISTOR_HEIGHT_14nm/MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 10 * 1e-9)
-		minCellHeight *= (MAX_TRANSISTOR_HEIGHT_10nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 7 * 1e-9)
-		minCellHeight *= (MAX_TRANSISTOR_HEIGHT_7nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 5 * 1e-9)
-		minCellHeight *= (MAX_TRANSISTOR_HEIGHT_5nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 3 * 1e-9)
-		minCellHeight *= (MAX_TRANSISTOR_HEIGHT_3nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 2 * 1e-9)
-		minCellHeight *= (MAX_TRANSISTOR_HEIGHT_2nm /MAX_TRANSISTOR_HEIGHT);
-		else if (tech.featureSize == 1 * 1e-9)
-		minCellHeight *= (MAX_TRANSISTOR_HEIGHT_1nm /MAX_TRANSISTOR_HEIGHT);
-		else
-		minCellHeight *= 1;		
-		
 		area = 0;
 		height = 0;
 		width = 0;
@@ -161,8 +142,8 @@ void WLDecoderOutput::CalculateArea(double _newHeight, double _newWidth, AreaMod
 		// Resistance
 		// TG
 		double resTgN, resTgP;
-		resTgN = CalculateOnResistance(widthTgN, NMOS, inputParameter.temperature, tech);
-		resTgP = CalculateOnResistance(widthTgP, PMOS, inputParameter.temperature, tech);
+		resTgN = CalculateOnResistance(widthTgN, NMOS, inputParameter.temperature, tech, 0);
+		resTgP = CalculateOnResistance(widthTgP, PMOS, inputParameter.temperature, tech, 0);
 		resTg = 1/(1/resTgN + 1/resTgP);
 
 		// Capacitance
@@ -179,7 +160,7 @@ void WLDecoderOutput::CalculateArea(double _newHeight, double _newWidth, AreaMod
 	}
 }
 
-void WLDecoderOutput::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numRead, double numWrite) {
+void WLDecoderOutput::CalculateLatency(double _rampInput, double _capLoad, double _resLoad, double numRead, double numWrite, int M3D) {
 	if (!initialized) {
 		cout << "[WLDecoderOutput] Error: Require initialization first!" << endl;
 	} else {
@@ -196,17 +177,13 @@ void WLDecoderOutput::CalculateLatency(double _rampInput, double _capLoad, doubl
 		double beta;	/* for horowitz calculation */
 		
 		// 1st stage: NOR2
-		resPullUp = CalculateOnResistance(widthNorP, PMOS, inputParameter.temperature, tech) * 2;
+		resPullUp = CalculateOnResistance(widthNorP, PMOS, inputParameter.temperature, tech, M3D) * 2;
 		tr = resPullUp * (capNorOutput + capInvInput + capTgGateP + capNmosGate);
 		gm = CalculateTransconductance(widthNorP, PMOS, tech);
 		beta = 1 / (resPullUp * gm);
 		readLatency += horowitz(tr, beta, rampInput, NULL);
 		
 		// TG delay
-
-		// 1.4 update
-		// resTg needs check
-
 		capOutput = capTgDrain + capNmosDrain;
 		tr = resTg * (capOutput + capLoad) + resLoad * capLoad / 2;
 		readLatency += horowitz(tr, 0, 1e20, &rampOutput);	// get from chargeLatency in the original SubArray.cpp

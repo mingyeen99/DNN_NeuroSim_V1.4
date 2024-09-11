@@ -61,16 +61,12 @@ void DecoderDriver::Initialize(int _mode, int _numOutput /* # of array rows/colu
 	EnlargeSize(&widthInvN, &widthInvP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech);
 
 	// TG
-
-	// 1.4 update : Onresistance calculation update for <14 nm
 	resTg = cell.resMemCellOn / numLoad * IR_DROP_TOLERANCE;
-	widthTgN = CalculateOnResistance_normal( ((tech.featureSize <= 14*1e-9)? 2:1) * tech.featureSize, NMOS, inputParameter.temperature, tech)
+	widthTgN = CalculateOnResistance(tech.featureSize, NMOS, inputParameter.temperature, tech, 0)
 				* tech.featureSize / (resTg*2);
-	widthTgP = CalculateOnResistance_normal( ((tech.featureSize <= 14*1e-9)? 2:1) * tech.featureSize, PMOS, inputParameter.temperature, tech)
-				* tech.featureSize / (resTg*2);
-	resTg = 1 / (1/CalculateOnResistance_normal(widthTgN, NMOS, inputParameter.temperature, tech)
-			+ 1/CalculateOnResistance_normal(widthTgP, PMOS, inputParameter.temperature, tech));
-
+	widthTgP = CalculateOnResistance(tech.featureSize, PMOS, inputParameter.temperature, tech, 0)
+				* tech.featureSize / (resTg*2);;
+	
 	initialized = true;
 }
 
@@ -81,45 +77,6 @@ void DecoderDriver::CalculateArea(double _newHeight, double _newWidth, AreaModif
 		double hInv, wInv, hTg, wTg;
 		double minCellHeight = MAX_TRANSISTOR_HEIGHT * tech.featureSize;
 		double minCellWidth = 2 * (POLY_WIDTH + MIN_GAP_BET_GATE_POLY) * tech.featureSize;
-
-		// 1.4 update: new cell dimenstion
-		
-		if (tech.featureSize == 14 * 1e-9)
-		minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_14nm/MAX_TRANSISTOR_HEIGHT);
-    	else if (tech.featureSize == 10 * 1e-9)
-    	minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_10nm /MAX_TRANSISTOR_HEIGHT);
-    	else if (tech.featureSize == 7 * 1e-9)
-    	minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_7nm /MAX_TRANSISTOR_HEIGHT);
-    	else if (tech.featureSize == 5 * 1e-9)
-    	minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_5nm /MAX_TRANSISTOR_HEIGHT);
-    	else if (tech.featureSize == 3 * 1e-9)
-    	minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_3nm /MAX_TRANSISTOR_HEIGHT);
-    	else if (tech.featureSize == 2 * 1e-9)
-    	minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_2nm /MAX_TRANSISTOR_HEIGHT);
-    	else if (tech.featureSize == 1 * 1e-9)
-    	minCellHeight *= ( (double)MAX_TRANSISTOR_HEIGHT_1nm /MAX_TRANSISTOR_HEIGHT);
-    	else
-    	minCellHeight *= 1;
-
-		if (tech.featureSize == 14 * 1e-9)
-		minCellWidth  *= ( (double)CPP_14nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-    	else if (tech.featureSize == 10 * 1e-9)
-    	minCellWidth  *= ( (double)CPP_10nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-    	else if (tech.featureSize == 7 * 1e-9)
-    	minCellWidth  *= ( (double)CPP_7nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-    	else if (tech.featureSize == 5 * 1e-9)
-    	minCellWidth  *= ( (double)CPP_5nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-    	else if (tech.featureSize == 3 * 1e-9)
-    	minCellWidth  *= ( (double)CPP_3nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-    	else if (tech.featureSize == 2 * 1e-9)
-    	minCellWidth  *= ( (double)CPP_2nm /(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-    	else if (tech.featureSize == 1 * 1e-9)
-   		minCellWidth  *= ( (double)CPP_1nm/(MIN_GAP_BET_GATE_POLY + POLY_WIDTH));
-    	else
-    	minCellWidth  *= 1;	
-		
-		
-		
 		area = 0;
 		height = 0;
 		width = 0;
@@ -245,8 +202,7 @@ void DecoderDriver::CalculateLatency(double _rampInput, double _capLoad1, double
 		double beta;	/* for horowitz calculation */
 		
 		// TG
-		// 1.4 update : capOutput change from capTgDrain * 2; neeeds check
-		capOutput = capTgDrain*4 + capTgGateN*0.5 + capTgGateP*0.5;
+		capOutput = capTgDrain * 2;
 		tr = resTg * (capOutput + capLoad1) + resLoad * capLoad1 / 2;
 		readLatency += horowitz(tr, 0, rampInput, &rampOutput); // get from chargeLatency in the original SubArray.cpp
 		readLatency *= numRead;
